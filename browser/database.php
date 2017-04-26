@@ -142,7 +142,7 @@ function db_get_nouns($type_name) {
 }
 
 function db_get_noun_types($noun) {
-  $types = db_select_objects("select corelex_type from nouns where noun='$noun'");
+  $types = db_select_objects("select * from nouns where noun='$noun'");
   return $types;
 }
 

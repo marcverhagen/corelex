@@ -1,7 +1,10 @@
 
+.navigation { font-size: 120%; }
+
 a:link { text-decoration: none; color: darkblue; }
 a:visited { text-decoration: none; color: darkblue; }
 a:hover { text-decoration: none; color: darkred; }
 
 .nouns { width: 1000; }
 
+.indent { margin-left: 10px; }

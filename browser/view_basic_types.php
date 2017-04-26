@@ -9,9 +9,11 @@
 
 <body>
 
-<h1>CoreLex Browser</h1>
+<h1>Basic Types</h1>
 
 <?php util_write_navigation(); ?>
+
+<p>To be added</p>
 
 </body>
 </html>
