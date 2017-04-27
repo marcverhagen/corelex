@@ -6,6 +6,7 @@ require('utils.php');
 db_connect();
 
 $type_name = $_GET['id'];
+$searched_noun = $_GET['noun'];
 
 $corelex_type = db_get_corelex_type($type_name);
 
@@ -77,8 +78,11 @@ foreach ($corelex_type as $t) {
   printf("  <td>\n");
   foreach ($nouns as $noun) {
     if ($noun->polysemous_type == $poltype) {
-      //printf("%s ", $noun->noun);
-      printf("<a href='%s?s=%s'>%s</a> ", $wordnet_url, $noun->noun, $noun->noun);
+      if ($noun->noun == $searched_noun) {
+         printf("<b><a href='%s?s=%s'>%s</a></b> ", $wordnet_url, $noun->noun, $noun->noun);
+      } else {
+         printf("<a href='%s?s=%s'>%s</a> ", $wordnet_url, $noun->noun, $noun->noun);
+      }
     }
   }
 }

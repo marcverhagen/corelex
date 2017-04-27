@@ -62,7 +62,7 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
       $ct = $type->corelex_type;
       $wn = sprintf("%s?s=%s", $wordnet_url, $noun);
       printf("<tr>\n");
-      printf("  <td><a href='view_type.php?id=%s'>%s</a></td>\n", $ct, $ct);
+      printf("  <td><a href='view_type.php?id=%s&noun=%s'>%s</a></td>\n", $ct, $noun, $ct);
       printf("  <td>%s</td>\n", $type->polysemous_type);
       printf("  <td><a href='%s'>%s</a></td>\n", $wn, $wn);
       printf("</tr>\n");

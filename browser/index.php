@@ -21,7 +21,7 @@
    PhD Thesis, Computer Science, Brandeis University, February 1998.
 </blockquote>
   
-<p>CoreLex is available at for download at <a href="http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html">http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html</a>, which also has a link to an old CoreLex Browser.</p>
+<p>CoreLex is available for download at <a href="http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html">http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html</a>, which also has a link to an old CoreLex Browser.</p>
 
 <p>The browser here has the following components, accessible via the links at the top of this page:</p>
 
