@@ -10,7 +10,13 @@ $DEBUG = false;
 
 $noun = $_GET['noun'];
 if ($noun) {
-  $noun_types = db_get_noun_types($noun); }
+  if (ctype_alpha($noun)) {
+    $search_allowed = true;
+    $noun_types = db_get_noun_types($noun);
+  } else {
+    $search_allowed = false;
+  }
+}
 
 $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
@@ -46,7 +52,9 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 </p>
   
 <?php 
-  if ($noun and $noun_types) {
+  if (! $search_allowed) {
+    printf("<p class='warning'>WARNING: search term '%s' is not allowed, use letters only.</p>\n", $noun);
+  } else if ($noun and $noun_types) {
     printf("<p><b>$noun</b></p>"); 
 ?>
 

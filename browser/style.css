@@ -14,3 +14,5 @@ a:hover { text-decoration: none; color: darkred; }
 .nouns { width: 1000; }
 
 .indent { margin-left: 10px; }
+
+.warning { color: red; }
