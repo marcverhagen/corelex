@@ -10,8 +10,9 @@ $DEBUG = false;
 
 $noun = $_GET['noun'];
 if ($noun) {
-  $noun_types = db_get_noun_types($noun);
-}
+  $noun_types = db_get_noun_types($noun); }
+
+$wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -54,13 +55,16 @@ if ($noun) {
 <tr valign="top">
   <td>Corelex Type</td>
   <td>Polysemous Type</td>
+  <td>WordNet Entry</td>
 </tr>
 <?php
     foreach ($noun_types as $type) {
       $ct = $type->corelex_type;
+      $wn = sprintf("%s?s=%s", $wordnet_url, $noun);
       printf("<tr>\n");
       printf("  <td><a href='view_type.php?id=%s'>%s</a></td>\n", $ct, $ct);
       printf("  <td>%s</td>\n", $type->polysemous_type);
+      printf("  <td><a href='%s'>%s</a></td>\n", $wn, $wn);
       printf("</tr>\n");
     }
     ?>
