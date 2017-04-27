@@ -9,9 +9,10 @@ $DEBUG = true;
 $DEBUG = false;
 
 $noun = $_GET['noun'];
+
+$search_allowed = true;
 if ($noun) {
-  if (ctype_alpha($noun)) {
-    $search_allowed = true;
+  if (ctype_alpha($noun) or is_null($noun)) {
     $noun_types = db_get_noun_types($noun);
   } else {
     $search_allowed = false;
