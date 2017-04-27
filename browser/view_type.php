@@ -38,11 +38,11 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 </pre>
 -->
 
-<h2>CoreLex Type <?php echo strtoupper($type_name); ?></h2>
+<h1>CoreLex Type <?php echo strtoupper($type_name); ?></h1>
 
 <?php util_write_navigation(); ?>
 
-<table cellpadding="5" cellspacing="0" border="1">
+<table class="indent" cellpadding="5" cellspacing="0" border="1">
 
 <?php
 
@@ -65,9 +65,9 @@ foreach ($corelex_type as $t) {
 
 </table>
 
-<br/><br/>
+<br/>
 
-<table class="nouns" cellpadding="5" cellspacing="0" border="1">
+<table class="nouns indent" cellpadding="5" cellspacing="0" border="1">
 
 <?php
 foreach ($corelex_type as $t) {

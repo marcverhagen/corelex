@@ -46,7 +46,7 @@ if ($noun) {
   
 <?php 
   if ($noun and $noun_types) {
-    printf("<p>Search results for: <b>$noun</b></p>"); 
+    printf("<p><b>$noun</b></p>"); 
 ?>
 
 <p>

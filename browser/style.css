@@ -1,9 +1,15 @@
 
-.navigation { font-size: 120%; }
+body { max-width: 1200px; }
+
+h1 { border-bottom: thin solid darkgreen; padding: 5px; padding-bottom: 10x; }
+
+p { margin-left: 3px; }
 
 a:link { text-decoration: none; color: darkblue; }
 a:visited { text-decoration: none; color: darkblue; }
 a:hover { text-decoration: none; color: darkred; }
+
+.navigation { font-size: 120%; }
 
 .nouns { width: 1000; }
 

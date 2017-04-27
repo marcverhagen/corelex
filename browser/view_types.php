@@ -34,7 +34,7 @@ foreach ($basic_types as $bt) {
 
 <?php util_write_navigation(); ?>
 
-<table cellpadding="5" cellspacing="0" border="1">
+<table class="indent" cellpadding="5" cellspacing="0" border="1">
 
 <?php
 

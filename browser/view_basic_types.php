@@ -1,4 +1,13 @@
-<?php require('utils.php'); ?>
+<?php
+
+require('utils.php'); 
+require('database.php'); 
+
+db_connect();
+
+$basic_types = db_get_basic_types();
+
+?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -13,7 +22,25 @@
 
 <?php util_write_navigation(); ?>
 
-<p>To be added</p>
+<table class="indent" cellpadding="5" cellspacing="0" border="1">
+
+<tr>
+<td>basic type</td>
+<td>synset</td>
+<td>synset members</td>
+</tr>
+
+<?php
+  foreach ($basic_types as $bt) {
+    printf("<tr>\n");
+    printf("<td>%s</td>\n", $bt->basic_type);
+    printf("<td>%s</td>\n", $bt->synset_number);
+    printf("<td>%s</td>\n", $bt->synset_elements);
+    printf("</tr>\n");
+  }
+?>
+
+</table>
 
 </body>
 </html>
