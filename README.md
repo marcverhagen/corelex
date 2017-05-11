@@ -2,7 +2,7 @@
 
 CoreLex is a lexicon of nouns structured around systematic polysemy as found in WordNet. CoreLex was developed in the late nineties by Paul Buitelaar for his dissertation (*CoreLex: Systematic Polysemy and Underspecification*, PhD Thesis, Computer Science, Brandeis University, February 1998).
 
-See [http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html](http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html) to more information on CoreLex and/or to download it. See http://wordnet.princeton.edu/ for WordNet.
+See [http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html](http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html) for more information on CoreLex and/or to download it. See http://wordnet.princeton.edu/ for WordNet.
 
 This repository contains the front-end PHP code that gives access to database tables created from the CoreLex sources. The pages themselves are hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser).
 
