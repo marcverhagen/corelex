@@ -22,57 +22,34 @@ class WordNet(object):
                  noun_index_file, noun_data_file,
                  verb_index_file, verb_data_file):
         self.version = wn_version
-        self.lemma_idx = {}
-        self.synset_idx = {}
-        self.lemma_idx2 = { NOUN: {}, VERB: {} }
-        self.synset_idx2 = { NOUN: {}, VERB: {} }
-        #self._load_index(noun_index_file)
-        #self._load_synsets(noun_data_file)
-        self._load_index2(NOUN, noun_index_file)
-        self._load_synsets2(NOUN, noun_data_file)
+        self.lemma_idx = { NOUN: {}, VERB: {} }
+        self.synset_idx = { NOUN: {}, VERB: {} }
+        self._load_index(NOUN, noun_index_file)
+        self._load_synsets(NOUN, noun_data_file)
 
-    def _load_index(self, noun_index_file):
-        print('Loading index...')
-        for line in open(noun_index_file):
-            if line.startswith('  ') or len(line) < 25:
-                continue
-            word = Word(line.strip())
-            self.lemma_idx[word.lemma] = word.synsets
-
-    def _load_index2(self, cat, index_file):
+    def _load_index(self, cat, index_file):
         print('Loading %s ...' % index_file)
         for line in open(index_file):
             if line.startswith('  ') or len(line) < 25:
                 continue
             word = Word(line.strip())
-            self.lemma_idx2[cat][word.lemma] = word.synsets
+            self.lemma_idx[cat][word.lemma] = word.synsets
 
-    def _load_synsets(self, noun_data_file):
-        print('Loading synsets...')
-        for line in open(noun_data_file):
-            if line.startswith('  ') or len(line) < 25:
-                continue
-            synset = Synset(self, line.strip())
-            self.synset_idx[synset.id] = synset
-
-    def _load_synsets2(self, cat, data_file):
+    def _load_synsets(self, cat, data_file):
         print('Loading %s ...' % data_file)
         for line in open(data_file):
             if line.startswith('  ') or len(line) < 25:
                 continue
             synset = Synset(self, line.strip())
-            self.synset_idx2[cat][synset.id] = synset
-
-    def get_synset(self, synset_offset):
-        return self.synset_idx.get(synset_offset)
+            self.synset_idx[cat][synset.id] = synset
 
     def get_noun_synset(self, synset_offset):
-        return self.synset_idx2[NOUN].get(synset_offset)
+        return self.synset_idx[NOUN].get(synset_offset)
 
     def add_basic_types(self, basic_types):
         for name in basic_types:
             for synset, members in basic_types[name]:
-                self.get_synset(synset).make_basic_type(name)
+                self.get_noun_synset(synset).make_basic_type(name)
 
 
 class Word(object):
@@ -87,10 +64,11 @@ class Word(object):
 
 class Synset(object):
 
-    def __init__(self, wordnet, line):
+    def __init__(self, wordnet, line, cat=NOUN):
         """Initialize a synset by parsing the line in the data file. We are using the
         byte offset of the line as the synset identifier."""
         self.wn = wordnet
+        self.cat = NOUN
         self.line = line
         self.basic_type = False
         try:
@@ -180,13 +158,15 @@ class Synset(object):
         return self.pointers.get('~') is not None
 
     def hypernyms(self):
+        # TODO: make it use self.cat in determining where to get the synsets
         pointers = self.pointers.get('@', [])
         pointers.extend(self.pointers.get('@i', []))
-        return [self.wn.get_synset(p.target_synset) for p in pointers]
+        return [self.wn.get_noun_synset(p.target_synset) for p in pointers]
 
     def hyponyms(self):
+        # TODO: make it use self.cat in determining where to get the synsets
         pointers = self.pointers.get('~', [])
-        return [self.wn.get_synset(p.target_synset) for p in pointers]
+        return [self.wn.get_noun_synset(p.target_synset) for p in pointers]
 
     def paths_to_top(self):
         hypernyms = self.hypernyms()

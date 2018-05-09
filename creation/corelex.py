@@ -3,7 +3,7 @@ import sys
 import pprint
 import textwrap
 
-from wordnet import WordNet
+from wordnet import WordNet, NOUN, VERB
 import basic_types
 
 
@@ -33,9 +33,9 @@ class CoreLex(object):
         self.word_index = {}
         self.class_index = {}
         print("Creating CoreLex...")
-        for word in sorted(wordnet.lemma_idx.keys()):
-            synsets = wordnet.lemma_idx[word]
-            synsets = [wordnet.get_synset(synset) for synset in synsets]
+        for word in sorted(wordnet.lemma_idx[NOUN].keys()):
+            synsets = wordnet.lemma_idx[NOUN][word]
+            synsets = [wordnet.get_noun_synset(synset) for synset in synsets]
             basic_types = set()
             for synset in synsets:
                 path = synset.paths_to_top()
@@ -85,24 +85,30 @@ if __name__ == '__main__':
     wn_dir = "/DATA/resources/lexicons/wordnet/WordNet-%s/" % wn_version
 
     if wn_version == '1.5':
-        index_file = wn_dir + 'wn15/DICT/NOUN.IDX'
-        data_file = wn_dir + 'wn15/DICT/NOUN.DAT'
+        noun_index_file = wn_dir + 'wn15/DICT/NOUN.IDX'
+        noun_data_file = wn_dir + 'wn15/DICT/NOUN.DAT'
+        verb_index_file = wn_dir + 'wn15/DICT/VERB.IDX'
+        verb_data_file = wn_dir + 'wn15/DICT/VERB.DAT'
         btypes = basic_types.BASIC_TYPES_1_5
     elif wn_version == '3.1':
-        index_file = wn_dir + 'dict/index.noun'
-        data_file = wn_dir + 'dict/data.noun'
+        noun_index_file = wn_dir + 'dict/index.noun'
+        noun_data_file = wn_dir + 'dict/data.noun'
+        verb_index_file = wn_dir + 'dict/index.verb'
+        verb_data_file = wn_dir + 'dict/data.verb'
         btypes = basic_types.BASIC_TYPES_3_1
     else:
         exit("ERROR: unsupported wordnet version")
 
-    wn = WordNet(wn_version, index_file, data_file)
+    wn = WordNet(wn_version,
+                 noun_index_file, noun_data_file,
+                 verb_index_file, verb_data_file)
 
     # todo: add this to corelex creation
     wn.add_basic_types(btypes)
 
     cl = CoreLex(wn)
-    cl.pp_summary()
-    #cl.write('corelex.tab')
-    #cl.pp('corelex.txt')
+    #cl.pp_summary()
+    cl.write('corelex.tab')
+    cl.pp('corelex.txt')
 
     #test_paths_top_top(wn):

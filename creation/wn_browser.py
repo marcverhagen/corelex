@@ -15,11 +15,11 @@ if sys.version_info.major < 3:
 
 class UserLoop(object):
 
-    MAIN_MODE = 0
-    SEARCH_MODE = 1
-    WORD_MODE = 2
-    SYNSET_MODE = 3
-    STATS_MODE = 4
+    MAIN_MODE = 'MAIN_MODE'
+    SEARCH_MODE = 'SEARCH_MODE'
+    WORD_MODE = 'WORD_MODE'
+    SYNSET_MODE = 'SYNSET_MODE'
+    STATS_MODE = 'STATS_MODE'
 
     PROMPT = "\n%s>> %s" % (BOLD, RESET)
     
@@ -27,8 +27,6 @@ class UserLoop(object):
         self.wn = wordnet
         self.lemma_idx = wordnet.lemma_idx
         self.synset_idx = wordnet.synset_idx
-        self.lemma_idx2 = wordnet.lemma_idx2
-        self.synset_idx2 = wordnet.synset_idx2
         self.mode = UserLoop.MAIN_MODE
         self.search_term = None
         self.mapping = []
@@ -38,7 +36,7 @@ class UserLoop(object):
 
     def run(self):
         while True:
-            print()
+            print(self.mode)
             if self.mode == UserLoop.MAIN_MODE:
                 self.main_mode()
             elif self.mode == UserLoop.SEARCH_MODE:
@@ -70,17 +68,14 @@ class UserLoop(object):
         if choice == '':
             self.mode = UserLoop.MAIN_MODE
         else:
-            if choice in self.lemma_idx2[NOUN]:
+            if choice in self.lemma_idx[NOUN]:
                 self.search_term = choice
                 self.mode = UserLoop.WORD_MODE
             else:
                 print("Not in WordNet")
                 
     def word_mode(self):
-        #synsets_offsets = self.lemma_idx.get(self.search_term)
-        synsets_offsets = self.lemma_idx2[NOUN].get(self.search_term)
-        print(synsets_offsets)
-        #self.synsets = [self.wn.get_synset(off) for off in synsets_offsets]
+        synsets_offsets = self.lemma_idx[NOUN].get(self.search_term)
         self.synsets = [self.wn.get_noun_synset(off) for off in synsets_offsets]
         self.mapping = list(enumerate(self.synsets))
         self.mapping_idx = dict(self.mapping)
