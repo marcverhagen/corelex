@@ -1,0 +1,5 @@
+*~
+corelex.tab
+corelex.txt
+tmp.*
+__pycache__

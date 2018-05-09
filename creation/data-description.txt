@@ -1,0 +1,151 @@
+== Description
+
+https://wordnet.princeton.edu/documentation/wndb5wn
+
+For each category, two files contain the data. For example, for nouns we have:
+
+	index.noun
+	data.noun
+
+
+== Index file description
+
+An index file is an alphabetized list of all the words found in WordNet. Each line contains various columns separated by spaces:
+
+lemma pos synset_cnt p_cnt [ptr_symbol...] sense_cnt tagsense_cnt synset_offset [synset_offset...]
+
+   lemma
+	Lower case ASCII text of word or collocation, 
+	using underscores for collocations.
+
+   pos
+	Syntactic category: noun (n), verb (v), adjective (a) and adverb (r).
+
+   synset_cnt
+	Number of synsets that lemma is in (number of senses of the word in WordNet).
+	Most frequent ones first.
+
+   p_cnt
+	Number of different pointers that lemma has in all synsets containing it.
+
+   ptr_symbol
+	A space separated list of p_cnt different types of pointers that lemma has
+	in all synsets containing it. 
+	See wninput(5WN) for a list of pointer_symbol s.
+	If all senses of lemma have no pointers, this field is omitted and p_cnt is 0 .
+	Some pointer symbols for nouns are
+		@ hypernym
+		~ hyponym
+
+   sense_cnt
+	Same as sense_cnt above (redundant, but kept for compatibility reasons).
+
+   tagsense_cnt
+	Number of senses of lemma that are ranked according to their frequency of
+	occurrence in semantic concordance texts.
+
+   synset_offset
+	Byte offset in data.pos file of a synset containing lemma.
+	Each synset_offset in the list corresponds to a different sense of lemma
+	in WordNet. 
+	This is an 8 digit, zero-filled decimal integer that can be used with fseek
+	to read a synset from the data file.
+
+Example:
+	abducent n 1 1 @ 1 0 05486760  
+	abducent_nerve n 1 1 @ 1 0 05486760  
+	casuistry n 2 3 @ ~ + 2 0 06169960 06169771  
+
+That is for WN.3.1 it is different for version 1.5, where the last one above is
+
+	casuistry n 2 2 @ ~ 1 04097463 
+
+Or look at the difference for casualty
+
+	3.1	casualty n 4 3 @ ~ ; 4 0 09919234 09919123 07376317 07354694
+	1.5	casualty n 3 2 @ ~ 3 05986904 04719021 04699226  
+
+
+== Description of the data file (focusing at nouns)
+
+Format:
+
+synset_offset lex_filenum ss_type w_cnt [word lex_id]+ p_cnt [ptr...] [frames...] | gloss 
+
+Example (line breaks added for readability):
+
+	00001740 03 n 01 entity 0 003 ~ 00001930 n 0000 ~ 00002137 n 0000 ~ 04431553 n 0000 
+	| that which is perceived or known or inferred to have its own distinct existence 
+	(living or nonliving) 
+
+Fields:
+
+   synset_offset
+	Current byte offset in the file represented as an 8 digit decimal integer.
+	(This actually tends to point to the last character of the previous line)
+
+   lex_filenum
+	Two digit decimal integer corresponding to the lexicographer file name 
+	containing the synset. See lexnames(5WN) (link is external) for the list
+	of filenames and their corresponding numbers.
+
+   ss_type
+	The synset type: n, v, a, s (adjective satellite) or r
+ 
+   w_cnt
+	Two digit hexadecimal integer indicating the number of words in the synset.
+
+   word
+	ASCII form of a word as entered in the synset by the lexicographer, 
+	with spaces replaced by underscore characters. The text of the word is 
+	case sensitive, in contrast to its form in the corresponding index.pos file. 
+	(Some marker is added for adjectives)
+
+   lex_id
+	One digit hexadecimal integer that, when appended onto lemma, uniquely 
+	identifies a sense within a lexicographer file.
+
+   p_cnt
+	Three digit decimal integer indicating the number of pointers from this
+	synset to other synsets. If p_cnt is 000 the synset has no pointers.
+
+   ptr
+	A pointer from this synset to another. ptr is of the form:
+
+	   pointer_symbol synset_offset pos source/target 
+
+	synset_offset is the byte offset of the target synset in the data file
+	corresponding to pos.
+
+	The source/target field distinguishes lexical and semantic pointers. 
+	It is a four byte field, containing two two-digit hexadecimal integers. 
+	The first two digits indicates the word number in the current (source) 
+	synset, the last two digits indicate the word number in the target 
+	synset. A value of 0000 means that pointer_symbol represents a 
+	semantic relation between the current (source) synset and the target 
+	synset indicated by synset_offset .
+
+	A lexical relation between two words in different synsets is 
+	represented by non-zero values in the source and target word numbers. 
+	The first and last two bytes of this field indicate the word numbers 
+	in the source and target synsets, respectively, between which the 
+	relation holds. Word numbers are assigned to the word fields in a 
+	synset, from left to right, beginning with 1 .
+
+   frames
+	In data.verb only, a list of numbers corresponding to the generic verb 
+	sentence frames for word s in the synset. frames is of the form:
+
+	   f_cnt   +   f_num  w_num  [ +   f_num  w_num...] 
+
+	For more information see 
+
+	   https://wordnet.princeton.edu/documentation/wndb5wn
+
+   gloss
+	Each synset contains a gloss. A gloss is represented as a vertical bar,
+	followed by a text string that continues until the end of the line. The
+	gloss may contain a definition and/or example sentences.
+
+
+
