@@ -69,6 +69,46 @@ class CoreLex(object):
         print("TOTAL\t%d" % total_count)
 
 
+class CoreLexVerbs(object):
+
+    def __init__(self, wordnet):
+        self.wordnet = wordnet
+        self.word_index = {}
+        self.class_index = {}
+        print("Creating CoreLex...")
+        for word in sorted(wordnet.lemma_idx[VERB].keys()):
+            synsets = wordnet.lemma_idx[VERB][word]
+            synsets = [wordnet.get_synset(VERB, synset) for synset in synsets]
+            basic_types = set()
+            for synset in synsets:
+                path = synset.paths_to_top()
+                synsets = flatten(path)
+                for synset in synsets:
+                    if synset.basic_type:
+                        basic_types.add(synset.basic_type)
+            corelex_class = ' * '.join(sorted(basic_types))
+            self.word_index[word] = corelex_class
+            self.class_index.setdefault(corelex_class, []).append(word)
+
+    def write(self, filename):
+        print("Writing CoreLex compactly to", filename)
+        fh = open(filename, 'w')
+        for cl_class in sorted(self.class_index.keys()):
+            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
+
+    def pp(self, filename):
+        print("Writing CoreLex verbosely to", filename)
+        fh = open(filename, 'w')
+        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
+        for cl_class in sorted(self.class_index.keys()):
+            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                fh.write("%s\n\n" % cl_class)
+                for line in tw.wrap(' '.join(self.class_index[cl_class])):
+                    fh.write(line + "\n")
+                fh.write("\n")
+
+
 def test_paths_top_top(wn):
     act = wn.get_synset('00016649')
     compound = wn.get_synset('08907331')
@@ -81,7 +121,9 @@ def test_paths_top_top(wn):
 
 if __name__ == '__main__':
 
-    wn_version = sys.argv[1] if len(sys.argv) > 1 else '3.1'
+    wn_version = sys.argv[1]
+    category = sys.argv[2]
+
     wn_dir = "/DATA/resources/lexicons/wordnet/WordNet-%s/" % wn_version
 
     if wn_version == '1.5':
@@ -99,19 +141,27 @@ if __name__ == '__main__':
     else:
         exit("ERROR: unsupported wordnet version")
 
-    wn = WordNet(wn_version,
+    wn = WordNet(wn_version, category,
                  noun_index_file, noun_data_file,
                  verb_index_file, verb_data_file)
 
-    # todo: add this to corelex creation
-    wn.add_basic_types(btypes)
-    #wn.pp_toplevel()
-    wn.pp_basic_types()
-    #wn.display_basic_type_relations()
-    #exit()
-    cl = CoreLex(wn)
-    #cl.pp_summary()
-    cl.write('corelex.tab')
-    cl.pp('corelex.txt')
+    if category == NOUN:
+        wn.add_basic_types(btypes)
+        #wn.pp_toplevel()
+        wn.pp_basic_types()
+        #wn.display_basic_type_relations()
+        #exit()
+        cl = CoreLex(wn)
+        #cl.pp_summary()
+        cl.write('corelex.tab')
+        cl.pp('corelex.txt')
 
-    #test_paths_top_top(wn):
+        #test_paths_top_top(wn):
+
+    elif category == VERB:
+        wn.set_verbal_basic_types()
+        #wn.pp_basic_types(VERB)
+        cl = CoreLexVerbs(wn)
+        #cl.pp_summary()
+        cl.write('corelex.verbs.tab')
+        cl.pp('corelex.verbs.txt')

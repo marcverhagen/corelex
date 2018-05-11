@@ -1,5 +1,9 @@
 """
 
+$ python3 wn_browser.py <version> <category>
+
+<version> is 1.5 or 3.1
+<category> is noun or verb
 
 """
 
@@ -23,8 +27,9 @@ class UserLoop(object):
 
     PROMPT = "\n%s>> %s" % (BOLD, RESET)
     
-    def __init__(self, wordnet):
+    def __init__(self, wordnet, category):
         self.wn = wordnet
+        self.category = category
         self.lemma_idx = wordnet.lemma_idx
         self.synset_idx = wordnet.synset_idx
         self.mode = UserLoop.MAIN_MODE
@@ -49,7 +54,7 @@ class UserLoop(object):
                 self.stats_mode()
     
     def main_mode(self):
-        self.choices = [('s', 'search noun'), ('a', 'show statistics'), ('q', 'quit') ]
+        self.choices = [('s', 'search ' + self.category), ('a', 'show statistics'), ('q', 'quit') ]
         self.print_choices()
         choice = input(UserLoop.PROMPT)
         if choice == 'q':
@@ -62,22 +67,22 @@ class UserLoop(object):
             print("Not a valid choice")
 
     def search_mode(self):
-        print('\nEnter a noun to search WordNet')
+        print('\nEnter a %s to search WordNet' % self.category)
         print('Enter return to go to the home screen')
         choice = input(UserLoop.PROMPT)
         if choice == '':
             self.mode = UserLoop.MAIN_MODE
         else:
             choice = choice.replace(' ', '_')
-            if choice in self.lemma_idx[NOUN]:
+            if choice in self.lemma_idx[self.category]:
                 self.search_term = choice
                 self.mode = UserLoop.WORD_MODE
             else:
                 print("Not in WordNet")
                 
     def word_mode(self):
-        synsets_offsets = self.lemma_idx[NOUN].get(self.search_term)
-        self.synsets = [self.wn.get_noun_synset(off) for off in synsets_offsets]
+        synsets_offsets = self.lemma_idx[self.category].get(self.search_term)
+        self.synsets = [self.wn.get_synset(self.category, off) for off in synsets_offsets]
         self.mapping = list(enumerate(self.synsets))
         self.mapping_idx = dict(self.mapping)
         self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
@@ -105,6 +110,7 @@ class UserLoop(object):
             print("[%s]  %s" % (choice, description))
 
     def synset_mode(self):
+        #print(self, self.synset)
         self.synset.pp()
         self.choices = [('b', 'back to the word'), ('s', 'search'), ('h', 'home'), ('q', 'quit') ]
         self.print_choices()
@@ -122,12 +128,15 @@ class UserLoop(object):
 
     def stats_mode(self):
         print('Synsets without hypernyms:\n')
-        for synset in self.synset_idx.values():
+        count = 0
+        for synset in self.synset_idx[self.category].values():
             if not synset.hypernyms():
+                count += 1
                 print(synset)
                 #synset.pp_short()
-        # printintg the entity tree
-        if self.wn.version == '3.1':
+        print("\nNumber of synsets without hypernym: %d\n" % count)
+        # printing the entity tree
+        if self.category == NOUN and self.wn.version == '3.1':
             print('\nEntity tree (4 levels deep):\n')
             self.synset_idx.get('00001740').pp_tree(4)
         self.mode = UserLoop.MAIN_MODE
@@ -135,8 +144,9 @@ class UserLoop(object):
 
 if __name__ == '__main__':
 
-    wn_version = sys.argv[1] if len(sys.argv) > 1 else '3.1'
-
+    wn_version = sys.argv[1]
+    category = sys.argv[2]
+    
     # TODO: this should not be hard-coded
     wn_dir = "/DATA/resources/lexicons/wordnet/WordNet-%s/" % wn_version
 
@@ -153,8 +163,8 @@ if __name__ == '__main__':
     else:
         exit("ERROR: unsupported wordnet version")
 
-    wn = WordNet(wn_version,
+    wn = WordNet(wn_version, category,
                  noun_index_file, noun_data_file,
                  verb_index_file, verb_data_file)
-    UserLoop(wn)
+    UserLoop(wn, category)
 

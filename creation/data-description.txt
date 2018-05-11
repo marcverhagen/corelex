@@ -10,7 +10,8 @@ For each category, two files contain the data. For example, for nouns we have:
 
 == Index file description
 
-An index file is an alphabetized list of all the words found in WordNet. Each line contains various columns separated by spaces:
+An index file is an alphabetized list of all the words found in WordNet. Each
+line contains various columns separated by spaces:
 
 lemma pos synset_cnt p_cnt [ptr_symbol...] sense_cnt tagsense_cnt synset_offset [synset_offset...]
 
@@ -130,7 +131,11 @@ Fields:
 	The first and last two bytes of this field indicate the word numbers 
 	in the source and target synsets, respectively, between which the 
 	relation holds. Word numbers are assigned to the word fields in a 
-	synset, from left to right, beginning with 1 .
+	synset, from left to right, beginning with 1.
+
+	For lists of pointer symbols:
+
+	   https://wordnet.princeton.edu/documentation/wninput5wn
 
    frames
 	In data.verb only, a list of numbers corresponding to the generic verb 

@@ -19,14 +19,23 @@ if sys.version_info.major < 3:
 
 class WordNet(object):
 
-    def __init__(self, wn_version,
+    def __init__(self, wn_version, category,
                  noun_index_file, noun_data_file,
                  verb_index_file, verb_data_file):
         self.version = wn_version
+        self.category = category
         self.lemma_idx = { NOUN: {}, VERB: {} }
         self.synset_idx = { NOUN: {}, VERB: {} }
-        self._load_index(NOUN, noun_index_file)
-        self._load_synsets(NOUN, noun_data_file)
+        if category == NOUN:
+            self._load_index(NOUN, noun_index_file)
+            self._load_synsets(NOUN, noun_data_file)
+        elif category == VERB:
+            self._load_index(VERB, verb_index_file)
+            self._load_synsets(VERB, verb_data_file)
+        print("Loaded %d noun lemmas and %d noun synsets" %
+              (len(self.lemma_idx[NOUN]), len(self.synset_idx[NOUN])))
+        print("Loaded %d verb lemmas and %d verb synsets" %
+              (len(self.lemma_idx[VERB]), len(self.synset_idx[VERB])))
 
     def _load_index(self, cat, index_file):
         print('Loading %s ...' % index_file)
@@ -38,49 +47,68 @@ class WordNet(object):
 
     def _load_synsets(self, cat, data_file):
         print('Loading %s ...' % data_file)
+        c = 0
         for line in open(data_file):
+            c += 1
+            #if c > 50: break
             if line.startswith('  ') or len(line) < 25:
                 continue
-            synset = Synset(self, line.strip())
+            #print(line)
+            synset = Synset(self, line.strip(), cat)
             self.synset_idx[cat][synset.id] = synset
 
     def get_noun_synset(self, synset_offset):
         return self.synset_idx[NOUN].get(synset_offset)
 
-    def get_basic_types(self):
-        # TODO: now this is for nouns only
-        return [ss for ss in self.get_all_noun_synsets() if ss.basic_type]
+    def get_verb_synset(self, synset_offset):
+        return self.synset_idx[VERB].get(synset_offset)
+
+    def get_synset(self, category, synset_offset):
+        return self.synset_idx[category].get(synset_offset)
+
+    def get_basic_types(self, cat):
+        return [ss for ss in self.get_all_synsets(cat) if ss.basic_type]
     
-    def add_basic_types(self, basic_types):
-        # TODO: now this is for nouns only
+    def add_basic_types(self, cat, basic_types):
         for name in basic_types:
             for synset, members in basic_types[name]:
                 #print(name, '-', synset, '-', members)
-                self.get_noun_synset(synset).make_basic_type(name)
+                self.get_synset(cat, synset).make_basic_type(name)
 
-    def toptypes(self):
+    def set_verbal_basic_types(self):
+        for synset in self.get_all_synsets(VERB):
+            if not synset.has_hypernyms():
+                words = ["%s.%s.%s" % (word_lex[0], synset.lex_filenum, word_lex[1])
+                         for word_lex in synset.words]
+                synset.basic_type = ' '.join(words)
+
+    def toptypes(self, cat):
         toptypes = []
-        for synset in self.synset_idx[NOUN].values():
+        for synset in self.synset_idx[cat].values():
             if not synset.has_hypernyms():
                 toptypes.append(synset)
         return toptypes
 
-    def pp_toplevel(self):
-        toptypes = self.toptypes()
+    def pp_toplevel(self, cat):
+        toptypes = self.toptypes(cat)
         for tt in toptypes:
             tt.pp_tree(4)
             print()
 
-    def pp_basic_types(self):
-        basic_types = self.get_basic_types()
+    def pp_basic_types(self, cat):
+        basic_types = self.get_basic_types(cat)
         for bt in basic_types:
             synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.basic_type]
             super_types = set([ss.basic_type for ss in synsets])
             super_types.remove(bt.basic_type)
             print(bt, ' '.join(super_types))
+        print("\nNumber of basic types: %d\n" % len(basic_types))
 
     def get_all_noun_synsets(self):
-        return self.synset_idx[NOUN].values()
+        return self.get_all_synsets(NOUN)
+
+    def get_all_synsets(self, cat):
+        return self.synset_idx[cat].values()
 
     def display_basic_type_relations(self):
         """Utility method to generate all subtype-supertype pairs amongst basic
@@ -103,17 +131,20 @@ class Word(object):
         self.fields = line.split()
         self.lemma = self.fields[0]
         # this is more general since WordNet 1.5 and 3.1 differ in where the
-        # synset count is
+        # synset count is specified
         self.synsets = [f for f in self.fields if len(f) == 8 and f.isdigit()]
 
 
 class Synset(object):
 
-    def __init__(self, wordnet, line, cat=NOUN):
+    # TODO: for verb synsets not all data are loaded. In particular, it could
+    # have something like '01 + 09 00' following the pointers.
+
+    def __init__(self, wordnet, line, cat):
         """Initialize a synset by parsing the line in the data file. We are using the
         byte offset of the line as the synset identifier."""
         self.wn = wordnet
-        self.cat = NOUN
+        self.cat = cat
         self.line = line
         self.basic_type = False
         try:
@@ -157,7 +188,10 @@ class Synset(object):
 
     def validate(self):
         if self.fields:
-            print('WARNING: unparsed fields for', self)
+            if self.fields[1] != '+':
+                print('WARNING: unparsed fields for', self)
+                print(self.line)
+                print(self.fields)
         self._validate_pointers()
 
     def make_basic_type(self, name):
@@ -206,12 +240,12 @@ class Synset(object):
         # TODO: make it use self.cat in determining where to get the synsets
         pointers = self.pointers.get('@', [])
         pointers.extend(self.pointers.get('@i', []))
-        return [self.wn.get_noun_synset(p.target_synset) for p in pointers]
+        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
 
     def hyponyms(self):
         # TODO: make it use self.cat in determining where to get the synsets
         pointers = self.pointers.get('~', [])
-        return [self.wn.get_noun_synset(p.target_synset) for p in pointers]
+        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
 
     def paths_to_top(self):
         hypernyms = self.hypernyms()
@@ -282,4 +316,4 @@ class Pointer(object):
         self.pointer_type = fields.pop(0)
 
     def __str__(self):
-        return "<Pointer %s %s>" % (self.symbol, self.target_synset)
+        return "<Pointer %s %s %s %s>" % (self.pos, self.symbol, self.target_synset, self.pointer_type)
