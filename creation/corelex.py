@@ -5,34 +5,26 @@ import textwrap
 
 from wordnet import WordNet, NOUN, VERB
 import basic_types
+from utils import flatten
 
 
-def flatten(some_list):
-    result = []
-    for element in some_list:
-        if isinstance(element, list):
-            result.extend(flatten(element))
-        else:
-            result.append(element)
-    return result
-
-
-def filter_basic_types(set_of_basic_types):
-    for (subtype, supertype) in basic_types.BASIC_TYPES_ISA_RELATIONS_1_5:
+def filter_basic_types(set_of_basic_types, type_relations):
+    for (subtype, supertype) in type_relations:
         if subtype in set_of_basic_types and supertype in set_of_basic_types:
             set_of_basic_types.discard(supertype)
 
 
 class CoreLex(object):
 
-    # TODO: distinguish between version that create corelex from wordnet and
-    # version that reads corelex from files
-    
+    # TODO: distinguish between version that creates corelex from wordnet and
+    # version that reads corelex from files (now we only have the former)
+
     def __init__(self, wordnet):
         self.wordnet = wordnet
         self.word_index = {}
         self.class_index = {}
         print("Creating CoreLex...")
+        type_relations = self._get_type_relations()
         for word in sorted(wordnet.lemma_idx[NOUN].keys()):
             synsets = wordnet.lemma_idx[NOUN][word]
             synsets = [wordnet.get_noun_synset(synset) for synset in synsets]
@@ -43,10 +35,15 @@ class CoreLex(object):
                 for synset in synsets:
                     if synset.basic_type:
                         basic_types.add(synset.basic_type)
-            filter_basic_types(basic_types)
+            filter_basic_types(basic_types, type_relations)
             corelex_class = ' '.join(sorted(basic_types))
             self.word_index[word] = corelex_class
             self.class_index.setdefault(corelex_class, []).append(word)
+
+    def _get_type_relations(self):
+        if self.wordnet.version == '1.5':
+            return basic_types.BASIC_TYPES_ISA_RELATIONS_1_5
+        return basic_types.BASIC_TYPES_ISA_RELATIONS_3_1
 
     def write(self, filename):
         print("Writing CoreLex compactly to", filename)
@@ -65,8 +62,11 @@ class CoreLex(object):
             fh.write("\n")
 
     def pp_summary(self):
+        total_count = 0
         for cl_class in sorted(self.class_index.keys()):
+            total_count += len(self.class_index[cl_class])
             print("%s\t%d" % (cl_class, len(self.class_index[cl_class])))
+        print("TOTAL\t%d" % total_count)
 
 
 def test_paths_top_top(wn):
@@ -105,7 +105,10 @@ if __name__ == '__main__':
 
     # todo: add this to corelex creation
     wn.add_basic_types(btypes)
-
+    #wn.pp_toplevel()
+    wn.pp_basic_types()
+    #wn.display_basic_type_relations()
+    #exit()
     cl = CoreLex(wn)
     #cl.pp_summary()
     cl.write('corelex.tab')

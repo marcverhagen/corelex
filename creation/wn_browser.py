@@ -36,7 +36,7 @@ class UserLoop(object):
 
     def run(self):
         while True:
-            print(self.mode)
+            print()
             if self.mode == UserLoop.MAIN_MODE:
                 self.main_mode()
             elif self.mode == UserLoop.SEARCH_MODE:
@@ -68,6 +68,7 @@ class UserLoop(object):
         if choice == '':
             self.mode = UserLoop.MAIN_MODE
         else:
+            choice = choice.replace(' ', '_')
             if choice in self.lemma_idx[NOUN]:
                 self.search_term = choice
                 self.mode = UserLoop.WORD_MODE

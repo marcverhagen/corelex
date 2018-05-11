@@ -8,7 +8,8 @@ import sys
 import textwrap
 from ansi_codes import BOLD, BLUE, RESET
 from ansi_codes import blue, green, bold, boldgreen
-
+from utils import flatten
+              
 NOUN = 'noun'
 VERB = 'verb'
 
@@ -46,11 +47,55 @@ class WordNet(object):
     def get_noun_synset(self, synset_offset):
         return self.synset_idx[NOUN].get(synset_offset)
 
+    def get_basic_types(self):
+        # TODO: now this is for nouns only
+        return [ss for ss in self.get_all_noun_synsets() if ss.basic_type]
+    
     def add_basic_types(self, basic_types):
+        # TODO: now this is for nouns only
         for name in basic_types:
             for synset, members in basic_types[name]:
+                #print(name, '-', synset, '-', members)
                 self.get_noun_synset(synset).make_basic_type(name)
 
+    def toptypes(self):
+        toptypes = []
+        for synset in self.synset_idx[NOUN].values():
+            if not synset.has_hypernyms():
+                toptypes.append(synset)
+        return toptypes
+
+    def pp_toplevel(self):
+        toptypes = self.toptypes()
+        for tt in toptypes:
+            tt.pp_tree(4)
+            print()
+
+    def pp_basic_types(self):
+        basic_types = self.get_basic_types()
+        for bt in basic_types:
+            synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.basic_type]
+            super_types = set([ss.basic_type for ss in synsets])
+            super_types.remove(bt.basic_type)
+            print(bt, ' '.join(super_types))
+
+    def get_all_noun_synsets(self):
+        return self.synset_idx[NOUN].values()
+
+    def display_basic_type_relations(self):
+        """Utility method to generate all subtype-supertype pairs amongst basic
+        types. Results from this can be hand-fed into the basic_types module."""
+        pairs = []
+        for bt in self.get_basic_types():
+            synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.basic_type]
+            super_types = set([ss.basic_type for ss in synsets])
+            super_types.remove(bt.basic_type)
+            for st in super_types:
+                pairs.append((bt.basic_type, st))
+        for pair in sorted(set(pairs)):
+            print("%s," % str(pair), end='')
+        print(len(pairs), len(set(pairs)))
+        
 
 class Word(object):
 
