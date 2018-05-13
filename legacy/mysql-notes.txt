@@ -1,0 +1,29 @@
+
+CONNECTING on JustHost
+
+Run some SQL:
+
+$ mysql -p -u username database_name < file.sql 
+
+To import a single table into an existing database you would use the following command:
+
+$ mysql -u username -p -D database_name < tableName.sql
+
+Connecting
+
+$ mysql -p -u username
+
+mysql> use batcave1_corelex
+mysql> show columns from nouns;
+mysql> show tables
+mysql> help contents
+mysql> help administration
+
+
+
+ADDING INDEXES:
+
+ALTER TABLE  `nouns` ADD PRIMARY KEY (  `noun` ) ;
+ALTER TABLE  `nouns` ADD INDEX (  `corelex_type` ) ;
+ALTER TABLE  `nouns` ADD INDEX (  `polysemous_type` ) ;
+

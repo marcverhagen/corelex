@@ -1,0 +1,158 @@
+<HTML>
+<HEAD>
+<TITLE> 
+CoreLex 
+</TITLE>
+<BASE href="http://www.cs.brandeis.edu/~paulb/">
+</HEAD>
+<BODY background="/graphics/textures/cn.jpg">
+
+
+<P>
+<IMG SRC="line.blue.gif" ALT="-----">
+<P>
+
+<H2> 
+<IMG ALIGN=MIDDLE SRC="http://www.cs.brandeis.edu/graphics/bg/corrugated_metal.gif" ALT="-----">
+ <BR>
+ <BR>
+CoreLex
+</H2>
+
+<P>
+<IMG SRC="line.blue.gif" ALT="-----">
+<P>
+
+
+<STRONG>
+CoreLex: Systematic Polysemy and Underspecification
+ <BR>
+PhD Thesis, Computer Science, Brandeis University, February 1998
+ <BR>
+ <BR>
+Abstract
+</STRONG>
+
+<BLOCKQUOTE>
+<P>
+This thesis is concerned with a unified approach to the systematic polysemy and underspecification of nouns. Systematic polysemy -- senses that are systematically related and therefore predictable over classes of lexical items -- is fundamentally different from homonymy -- senses that are unrelated, non-systematic and therefore not predictable. At the same time, studies in discourse analysis show that lexical items are often left underspecified for a number of related senses. Clearly, there is a correspondence between these phenomena, the investigation of which is the topic of this thesis. 
+</P>
+
+<P>
+Acknowledging the systematic nature of polysemy and its relation to underspecified representations, allows one to structure ontologies for lexical semantic processing more efficiently, generating more appropriate interpretations within context. In order to achieve this, one needs a thorough analysis of systematic polysemy and underspecification on a large and useful scale. The thesis establishes an ontology and semantic database (<A HREF="CoreLex/overview.html">CoreLex</A>) of 126 semantic types, covering around 40,000 nouns and defining a large number of systematic polysemous classes that are derived by a careful analysis of sense distributions in <A href="http://www.cogsci.princeton.edu/~wn"> WordNet </A>. The semantic types are underspecified representations based on <A href="http://www.cs.brandeis.edu/~jamesp/books/mit-gl.html"> generative lexicon </A> theory. 
+</P>
+
+<P>
+The representations are used in underspecified semantic tagging, addressing two problems in traditional semantic tagging: sense enumeration (the difficulty on deciding the number of discrete senses), due to systematic polysemy; and multiple reference (NP's denoting more than one model-theoretic referent), due to underspecification. Also, traditional semantic tags that are based on discrete senses tend to be too fine-grained for practical use. For instance, WordNet has, in principle, around 60,000 different tags (synsets) for nouns alone. The CoreLex approach, on the other hand, offers a concise set of 126 tags that are inherently more coarse-grained, by taking into account systematic polysemy and underspecification.
+</P>
+
+<P>
+Underspecified semantic tagging is implemented, using probabilistic classification in order to cover unknown nouns (not in CoreLex) and to identify context-specific and new interpretations. The classification algorithm is centered around the computation of a Jaccard (similarity) score that compares lexical items in terms of the attributes (linguistic patterns acquired from domain specific corpora) they share.
+</P>
+</BLOCKQUOTE>
+
+
+<STRONG>
+Thesis
+</STRONG>
+
+<BLOCKQUOTE>
+<P>
+You can download the complete <A HREF="thesis.ps.gz">thesis </A> in Postscript (<STRONG>gzipped 256k</STRONG>)
+</P>
+</BLOCKQUOTE>
+
+
+<STRONG>
+CoreLex Database
+</STRONG>
+
+<BLOCKQUOTE>
+<P>
+The CoreLex database is freely available for research purposes, including commercial ones. This is in accordance with the <A href="http://www.cogsci.princeton.edu/~wn/">WordNet</A> policy on licensing. However, if you decide to use any of this material, make sure you give reference to
+</P>
+
+<DL>
+ <DL>
+ <DT> the thesis:
+  <DL>
+  <BR>
+  <DT> <STRONG>Paul Buitelaar - CoreLex: Systematic Polysemy and Underspecification, PhD Thesis, Computer Science, Brandeis University, February 1998</STRONG>
+  </DL>
+ <BR>
+ <DT> this webpage:
+  <DL>
+  <BR>
+  <DT> <STRONG>http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html</STRONG>
+  </DL>
+ <BR>
+ <DT> the WordNet webpage:
+  <DL>
+  <BR>
+  <DT> <STRONG>http://www.cogsci.princeton.edu/~wn</STRONG>
+  </DL>
+ </DL>
+</DL>
+
+<P>
+The database consists of three files. Each has a certain format that links them together like a relational database and also links them (through SYNSET_NUMBER references) to WordNet 1.5. 
+</P>
+
+<P>In summary, a NOUN is of a certain CORELEX_TYPE, each CORELEX_TYPE corresponds to one or more SYSTEMATIC_POLYSEMOUS_CLASS, each consisting of a set of BASIC_TYPE, each of which corresponds to one or more SYNSET in WordNet 1.5. 
+</P>
+
+<P>
+The files and formats are:
+</P>
+
+<DL>
+ <DL>
+ <DT><A HREF="CoreLex/corelex_nouns"> CoreLex </A> (<STRONG>536k</STRONG>)
+  <DL>
+  <BR>
+  <DT> NOUN ::  CORELEX_TYPE
+  </DL>
+ <BR>
+ <DT><A HREF="CoreLex/corelex_nouns.classes"> CoreLex Classes</A> (<STRONG>2k</STRONG>)
+  <DL>
+  <BR>
+  <DT> CORELEX_TYPE :: SYSTEMATIC_POLYSEMOUS_CLASS
+  </DL>
+ <BR>
+ <DT><A HREF="CoreLex/corelex_nouns.basictypes.synset"> CoreLex Basic Types</A> (<STRONG>5k</STRONG>)
+  <DL>
+  <BR>
+  <DT> BASIC_TYPE :: SYNSET_NUMBER :: SYNSET
+  </DL>
+ </DL>
+</DL>
+
+<P>
+<STRONG>Disclaimer</STRONG> : The CoreLex database as presented here results from an automatic extraction process. Some of the systematic polysemous classes therefore contain inappropriate instances, that should be manually removed. This step is described in the thesis, but should still be implemented on this version of the database. 
+</P>
+</BLOCKQUOTE>
+
+
+<STRONG>
+CoreLex On-Line
+</STRONG>
+
+<BLOCKQUOTE>
+<P>
+The CoreLex database is also available <A HREF="CoreLex/overview.html">on-line</A>, giving a complete overview of all 126 underspecified semantic types, the 317 systematic polysemous classes they correspond to and all 39,937 noun instances for each class as derived from WordNet 1.5
+</P>
+</BLOCKQUOTE>
+
+<BR>
+<BR>
+
+<P>
+This research has been supported by NSF ARPA grant IRI-931 4955 for the Core Lexical Engine project 
+</P>
+
+<HR>
+
+This page maintained by Paul Buitelaar: <a href="mailto:paulb@cs.brandeis.edu"> paulb@cs.brandeis.edu </a>
+
+</BODY>
+</HTML>

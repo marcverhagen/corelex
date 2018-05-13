@@ -1,7 +1,8 @@
 *~
 *pyc
+.DS_Store
 corelex.tab
 corelex.txt
 tmp.*
 __pycache__
-.DS_Store
+legacy/data/*sql

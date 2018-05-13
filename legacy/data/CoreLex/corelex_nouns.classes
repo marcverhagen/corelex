@@ -1,0 +1,326 @@
+
+# corelex_nouns.classes
+# =====================
+#
+# CORELEX_TYPE	SYSTEMATIC_POLYSEMOUS_CLASS (set of BASIC_TYPE)
+
+
+
+abs   abs 
+acp   act atr pro 
+acp   act atr pro sta 
+acp   act pro 
+acp   act pro psy 
+acp   act pro psy sta 
+acp   act pro sta 
+acp   pro psy 
+acp   pro sta 
+acr   act atr rel 
+acr   act evt rel 
+acr   act rel 
+acr   act rel sta 
+acs   act sta 
+act   act 
+aes   act evt sta 
+aev   act evt 
+age   act agt 
+agh   agt hum 
+agl   agt loc 
+agm   agt anm 
+agp   agt psy 
+agt   agt 
+anf   anm fod 
+anm   anm 
+ann   anm art nat 
+ann   anm nat 
+anp   anm psy 
+aqu   art qud 
+aqu   art qui 
+ara   act art atr psy
+ara   art atr 
+ara   art atr psy 
+ara   art atr sta 
+arg   art grp 
+arh   art hum 
+arp   art psy 
+arp   art psy sta 
+art   art 
+art   art sta 
+atc   atr com 
+atc   atr com phm psy 
+atc   atr com psy 
+atc   atr com psy sta 
+atc   atr com sta 
+ate   act atr 
+ate   act atr evt 
+ate   act atr evt sta 
+ate   act atr sta 
+ate   atr evt 
+ate   atr evt psy 
+ate   atr evt sta 
+atg   atr grp 
+atl   atr loc 
+atl   atr loc psy 
+atl   atr loc psy sta 
+atl   atr loc sta 
+atp   atr psy 
+atp   atr psy sta 
+atr   atr 
+atr   atr pro 
+atr   atr pro sta 
+atr   atr sta 
+avf   act art frm 
+avl   act art loc 
+avl   act art log 
+avr   act art evt rel 
+avr   art rel 
+avt   act art 
+avt   act art atr 
+avt   act art evt 
+avt   act art pro 
+avt   act art sta 
+avt   act atr pho 
+avt   art evt 
+avt   art evt sta 
+avt   art pro 
+caa   art atr com 
+cae   act art com 
+cae   act art com psy 
+cae   act art psy 
+cae   act art psy sta 
+cae   art com 
+cae   art com psy 
+cae   art com psy sta 
+cea   act atr com 
+cea   act atr com evt 
+cea   act atr com psy 
+cea   act atr com psy sta 
+cea   act atr evt psy 
+cea   act atr psy 
+cea   act atr psy sta 
+cel   cel 
+cha   art chm 
+cha   art chm sub 
+chf   chm fod 
+chm   chm 
+chm   chm sta 
+chp   chm plt 
+coa   act com 
+coa   act com evt 
+coa   act com evt 
+coa   act com evt psy 
+coa   act com pro 
+coa   act com psy 
+coa   act com psy sta 
+coa   act com rel 
+coa   act com sta 
+coa   com evt 
+coa   com pro 
+coh   com hum 
+col   com log 
+com   com 
+com   com psy 
+com   com psy sta 
+com   com rel 
+com   com sta 
+con   act con evt 
+con   con evt 
+con   con 
+ent   ent 
+evs   evt pro 
+evs   evt pro sta 
+evs   evt sta 
+evt   evt 
+fac   act art fod 
+fac   act fod 
+fev   fod grs 
+fod   atr fod 
+fod   fod 
+fod   fod frm 
+fod   fod nat 
+fod   fod qui 
+fod   fod sta 
+fod   fod sub 
+frc   com frm 
+frc   frm psy 
+fre   act evt frm 
+fre   act frm 
+fre   act frm sta 
+frm   atr frm 
+frm   atr frm sta 
+frm   frm 
+frm   frm sta 
+frt   art atr frm 
+frt   art frm 
+frt   art frm loc 
+frt   art frm nat 
+frt   art frm sta 
+ftp   atr fod plt 
+ftp   atr fod plt sub 
+gas   act grs 
+gas   act com grs 
+gas   act evt grs 
+gas   act grs psy 
+gas   act grs sta 
+gbp   grb psy 
+gbs   grb grs 
+grb   grb 
+grp   grp 
+grs   grp grs 
+grs   grs 
+grs   grs sta 
+grq   grs qud 
+gsa   act art com grs 
+gsa   act art grs 
+gsa   act atr grs 
+gsa   act grp 
+gsa   art grs 
+gsa   art grs sub 
+gsl   grs log 
+gsp   grs psy 
+gsp   grs psy sta 
+hue   act evt hum sta 
+hue   act hum 
+hue   evt hum 
+hue   hum sta 
+hum   grp hum 
+hum   grp hum nat 
+hum   grs hum 
+hum   hum 
+hup   hum psy 
+lac   act loc 
+lac   act log 
+lap   art loc 
+lap   art loc psy 
+lap   art loc sta 
+lap   com loc 
+lap   com loc psy 
+lap   loc psy 
+lap   loc sta 
+lfr   lfr 
+lgg   grp log 
+lme   lme 
+lme   lme qud 
+loc   art log sta 
+loc   loc 
+loc   log pos sta 
+loc   log sta 
+log   art log 
+log   log 
+log   log nat 
+lon   loc nat 
+lor   log rel 
+mea   mea 
+mic   mic 
+naa   art nat 
+nac   act art nat 
+nac   art evt nat 
+naf   frm nat 
+naq   nat qui 
+nat   nat 
+nat   nat sub 
+pan   art nat plt 
+pan   art plt 
+pan   art plt sub 
+pan   plt sub 
+pap   act atr pos psy 
+pas   act atr pos 
+pas   atr pos 
+pas   atr pos rel 
+pas   atr pos sta 
+plt   fod nat plt 
+plt   nat plt 
+plt   nat plt sub 
+plt   plt 
+pgb   grb plt 
+phm   act evt phm 
+phm   act evt phm sta 
+phm   act phm 
+phm   act phm sta 
+phm   evt phm 
+phm   phm 
+phm   phm pro 
+phm   phm rel 
+phm   phm sta 
+pho   pho 
+php   evt phm psy 
+php   phm psy 
+phs   phm sub 
+pht   atr phm 
+plf   fod plt 
+poa   act com evt pos 
+poa   act evt pos 
+poa   act pos 
+poa   act pos psy 
+poa   act pos psy sta 
+poa   evt pos 
+pom   com pos 
+pom   act com pos 
+pom   art com pos 
+pom   atr com pos 
+poq   pos qud 
+pos   pos 
+pos   pos pro 
+pos   pos psy 
+pos   pos sta 
+prn   nat pro 
+pro   pro 
+prt   art fod prt 
+prt   art frm prt 
+prt   art prt 
+prt   atr prt 
+prt   atr prt sub 
+prt   fod prt 
+prt   frm prt 
+prt   hum prt 
+prt   nat prt 
+prt   prt 
+prt   prt qui 
+prt   prt sta 
+psa   act art pos 
+psa   art pos 
+psg   act grp psy 
+psg   grp psy 
+psr   pos rel 
+psy   evt psy 
+psy   evt psy sta 
+psy   psy 
+psy   psy sta 
+pya   act evt psy 
+pya   act evt psy sta 
+pya   act psy 
+pya   act psy rel 
+pya   act psy sta 
+qcs   com qud sta 
+qcc   qud sta 
+qde   act qud 
+qie   act evt qui 
+qie   act qui 
+qud   qud 
+qui   qui 
+reg   grp rel 
+rel   atr rel 
+rel   atr psy rel 
+rel   hum rel 
+rel   psy rel 
+rel   rel 
+rel   rel sta 
+saa   art sub 
+saa   art atr sub 
+saa   atr sub 
+sas   act sta sub 
+sas   act sub 
+sas   sta sub 
+spc   spc 
+spe   act spc 
+sta   sta 
+sub   sub 
+tme   sta tme 
+tme   grp tme 
+tme   phm tme 
+tme   qud tme 
+tme   tme 
+tmt   atr tme 
+tmv   act evt tme 
+tmv   act tme 
+tmv   evt tme 

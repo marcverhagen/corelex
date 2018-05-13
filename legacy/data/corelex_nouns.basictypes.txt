@@ -1,0 +1,55 @@
+
+# corelex_nouns.basictypes.synset
+# ===============================
+#
+# BASIC_TYPE	SYNSET_#	SYNSET
+#
+# Basic types chm, grs, nat, tme occur more than once
+
+
+
+abs	00012670 	abstraction 0
+act	00016649	act 0 human_action 0 human_activity 0
+agt	00004473	causal_agent 0 cause 0 causal_agency 0
+anm	00008030	animal 0 animate_being 0 beast 0 brute 0 creature 0 fauna 0
+art	00011607	artifact 0 artefact 0
+atr	00017586	attribute 0
+cel	00003711	cell 0
+chm	08907331	compound 0 chemical_compound 0
+chm	08805286	chemical_element 0 element 0
+com	00018599	communication 0
+con	06465491	consequence 0 effect 0 outcome 0 result 0 upshot 0
+ent	00002403	entity 0
+evt	00016459	event 0
+fod	00011263	food 0 nutrient 0
+frm	00014558	shape 0 form 0
+grb	05115837	biological_group 0
+grp	00017008	group 0 grouping 0
+grs	05119847	social_group 0
+grs	05116476	people 0
+hum	00004865	person 0 individual 0 someone 0 mortal 0 human 0 soul 0
+lfr	00002728	life_form 0 organism 0 being 0 living_thing 0
+lme	08322690	linear_measure 0 long_measure 0
+loc	00014314	location 0
+log	05450515	region 1
+mea	00018966	measure 0 quantity 0 amount 0 quantum 0
+mic	00740781	microorganism 0
+nat	00009919	natural_object 0
+nat	05715416	body_of_water 0 water 0
+nat	05720524	land 0 dry_land 0 earth 1 ground 0 solid_ground 0 terra_firma 0
+plt	00008894	plant 0 flora 0 plant_life 0
+phm	00019295	phenomenon 0
+pho	00009469	object 0 inanimate_object 0 physical_object 0
+pos	00017394	possession 0
+pro	08239006	process 0
+prt	05650477	part 0 piece 0
+psy	00012517	psychological_feature 0
+qud	08310215	definite_quantity 0
+qui	08310433	indefinite_quantity 0
+rel	00017862	relation 0
+spc	00015245	space 0
+sta	00015437	state 0
+sub	00010368	substance 0 matter 0
+tme	09065837	time_period 0 period 0 period_of_time 0 amount_of_time 0
+tme	09092294	time_unit 0 unit_of_time 0
+tme	00014882	time 0

@@ -1,19 +1,15 @@
 # CoreLex
 
-CoreLex is a lexicon of nouns structured around systematic polysemy as found in WordNet. CoreLex was developed in the late nineties by Paul Buitelaar for his dissertation (*CoreLex: Systematic Polysemy and Underspecification*, PhD Thesis, Computer Science, Brandeis University, February 1998).
+CoreLex is a lexicon of nouns structured around systematic polysemy as found in WordNet. The original CoreLex was developed in the late nineties by Paul Buitelaar in his dissertation (*CoreLex: Systematic Polysemy and Underspecification*, PhD Thesis, Computer Science, Brandeis University, February 1998).
 
-See [http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html](http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html) for more information on CoreLex and/or to download it. See http://wordnet.princeton.edu/ for WordNet.
+CoreLex2 is a follow up project that expands on CoreLex.
 
-This repository contains the front-end PHP code that gives access to database tables created from the CoreLex sources. The pages themselves are hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser).
+This repository contains the following:
 
-### Setting up the CoreLex browser site
+1. [legacy](legacy). Sources of the legacy CoreLex as well as new code to create database tables from those sources.
 
-To create the browser you need to do the following:
+2. [browser](browser). The PHP code that gives access to an online database created from the CoreLex sources. The pages themselves are hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser).
 
-1. Create the database tables. There is code to do this which will be added to this repository, but part of it requires local access to the old static CoreLex Browser site on the Brandeis Computer Science server. Since CoreLex is built mostly automatically from WordNet these static files could be created directly from WordNet, but this has not been done yet.
+3. [creation](creation). Code to automatically create CoreLex from WordNet. Currently supported WordNet versions are 1.5, 3.0 and 3.1. When run on WordNet 1.5, this code creates the original CoreLex, when run on WordNet 3.1 it creates a version of CoreLex updated for WordNet 3.1, but it also run extra code to add verbs to CoreLex.
 
-2. Create a database, upload the schema and populate the tables. How to do this depends on your host set up. We have used MySQL.
-
-3. Put the `browser` directory with all its contents on a server.
-
-4. Copy the file `config-default.txt` to `config.txt` and edit the contents as required by the host.
+The pre-requisite for creating CoreLex is to have a copy of the WordNet index and data files. See http://wordnet.princeton.edu/ for WordNet downloads.
