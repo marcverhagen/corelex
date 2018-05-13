@@ -10,6 +10,6 @@ This repository contains the following:
 
 2. [browser](browser). The PHP code that gives access to an online database created from the CoreLex sources. The pages themselves are hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser).
 
-3. [creation](creation). Code to automatically create CoreLex from WordNet. Currently supported WordNet versions are 1.5, 3.0 and 3.1. When run on WordNet 1.5, this code creates the original CoreLex, when run on WordNet 3.1 it creates a version of CoreLex updated for WordNet 3.1, but it also run extra code to add verbs to CoreLex.
+3. [creation](creation). Code to automatically create CoreLex from WordNet. Currently supported WordNet versions are 1.5, 3.0 and 3.1. When run on WordNet 1.5, this code creates the original CoreLex, when run on WordNet 3.1 it creates a version of CoreLex updated for WordNet 3.1, but it also can run extra code to add verbs to CoreLex.
 
 The pre-requisite for creating CoreLex is to have a copy of the WordNet index and data files. See http://wordnet.princeton.edu/ for WordNet downloads.

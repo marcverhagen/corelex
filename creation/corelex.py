@@ -4,7 +4,7 @@ import pprint
 import textwrap
 
 from wordnet import WordNet, NOUN, VERB
-import basic_types
+import cltypes
 from utils import flatten
 
 
@@ -42,8 +42,8 @@ class CoreLex(object):
 
     def _get_type_relations(self):
         if self.wordnet.version == '1.5':
-            return basic_types.BASIC_TYPES_ISA_RELATIONS_1_5
-        return basic_types.BASIC_TYPES_ISA_RELATIONS_3_1
+            return cltypes.BASIC_TYPES_ISA_RELATIONS_1_5
+        return cltypes.BASIC_TYPES_ISA_RELATIONS_3_1
 
     def write(self, filename):
         print("Writing CoreLex compactly to", filename)
@@ -131,13 +131,13 @@ if __name__ == '__main__':
         noun_data_file = wn_dir + 'wn15/DICT/NOUN.DAT'
         verb_index_file = wn_dir + 'wn15/DICT/VERB.IDX'
         verb_data_file = wn_dir + 'wn15/DICT/VERB.DAT'
-        btypes = basic_types.BASIC_TYPES_1_5
+        btypes = cltypes.BASIC_TYPES_1_5
     elif wn_version == '3.1':
         noun_index_file = wn_dir + 'dict/index.noun'
         noun_data_file = wn_dir + 'dict/data.noun'
         verb_index_file = wn_dir + 'dict/index.verb'
         verb_data_file = wn_dir + 'dict/data.verb'
-        btypes = basic_types.BASIC_TYPES_3_1
+        btypes = cltypes.BASIC_TYPES_3_1
     else:
         exit("ERROR: unsupported wordnet version")
 

@@ -6,7 +6,6 @@
 
 import sys
 import textwrap
-from ansi_codes import BOLD, BLUE, RESET
 from ansi_codes import blue, green, bold, boldgreen
 from utils import flatten
               
@@ -283,7 +282,7 @@ class Synset(object):
 
     def pp_hypernyms(self):
         if self.has_hypernyms():
-            print('\n  %shypernyms%s' % (BLUE, RESET))
+            print('\n  %s' % blue('hypernyms'))
             for synset in self.hypernyms():
                 print('    [%d] %s' % (self.count, synset))
                 self.mappings[self.count] = synset
@@ -291,7 +290,7 @@ class Synset(object):
 
     def pp_hyponyms(self):
         if self.has_hyponyms():
-            print('\n  %shyponyms%s' % (BLUE, RESET))
+            print('\n  %s' % blue('hyponyms'))
             for synset in self.hyponyms():
                 print('    [%d] %s' % (self.count, synset))
                 self.mappings[self.count] = synset

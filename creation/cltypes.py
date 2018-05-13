@@ -1,4 +1,10 @@
-"""Contains the synsets from WordNet that are used as basic types for CoreLex.
+"""Basic types and Corelex types
+
+Contains the synsets from WordNet that are used as basic types for CoreLex and
+the definitions of CoreLex types.
+
+
+== Basic Types
 
 Basic types used when creating CoreLex from WordNet 1.5 are the same as the ones
 in Paul Buitelaar's dissertation, listed at
@@ -39,7 +45,8 @@ types that pointed to synsets that were split up and even one that did not exist
 any more (process.22.0). In many case the synset was at a different position in
 the hierarchy.
 
-== subsumption among basic types
+
+== Subsumption among basic types
 
 Some basic types are subtypes of each other, for example 'prt' is a subtype of
 'ent'. If a noun falls under two basic types that stand in an ISA relation than
@@ -50,6 +57,17 @@ is more specific than the second.
 The pairs for 1.5 were created manually from the hierarchy pictures in Paul
 Buitelaar's dissertations. The ones for 3.1 were created by a utility method in
 the wordnet module: WordNet.display_basic_type_relations().
+
+
+== CoreLex Types
+
+CoreLex types are defined as sets of polysemous types or basic types (where
+polysemous types consist of two or more basic types). These were defined
+manually back in 1998 by Paul Buitelaar and because the basic types are the same
+for the new version of CoreLex we can reuse the CoreLex types. The types are
+listed in ../legacy/data/corelex_nouns.classes.txt and the CORELEX_TYPES
+variable is created from that file using the create_corelex_types_mapping()
+function.
 
 """
 
@@ -230,3 +248,160 @@ BASIC_TYPES_ISA_RELATIONS_3_1 = [
     ('tme', 'abs'), ('tme', 'atr'), ('tme', 'ent'), ('tme', 'mea')
 ]
 
+
+CORELEX_TYPES = {
+
+    'abs': ['abs'],
+    'acp': ['act atr pro', 'act atr pro sta', 'act pro', 'act pro psy',
+            'act pro psy sta', 'act pro sta', 'pro psy', 'pro sta'],
+    'acr': ['act atr rel', 'act evt rel', 'act rel', 'act rel sta'],
+    'acs': ['act sta'],
+    'act': ['act'],
+    'aes': ['act evt sta'],
+    'aev': ['act evt'],
+    'age': ['act agt'],
+    'agh': ['agt hum'],
+    'agl': ['agt loc'],
+    'agm': ['agt anm'],
+    'agp': ['agt psy'],
+    'agt': ['agt'],
+    'anf': ['anm fod'],
+    'anm': ['anm'],
+    'ann': ['anm art nat', 'anm nat'],
+    'anp': ['anm psy'],
+    'aqu': ['art qud', 'art qui'],
+    'ara': ['act art atr psy', 'art atr', 'art atr psy', 'art atr sta'],
+    'arg': ['art grp'],
+    'arh': ['art hum'],
+    'arp': ['art psy', 'art psy sta'],
+    'art': ['art', 'art sta'],
+    'atc': ['atr com', 'atr com phm psy', 'atr com psy', 'atr com psy sta', 'atr com sta'],
+    'ate': ['act atr', 'act atr evt', 'act atr evt sta', 'act atr sta', 'atr evt',
+            'atr evt psy', 'atr evt sta'],
+    'atg': ['atr grp'],
+    'atl': ['atr loc', 'atr loc psy', 'atr loc psy sta', 'atr loc sta'],
+    'atp': ['atr psy', 'atr psy sta'],
+    'atr': ['atr', 'atr pro', 'atr pro sta', 'atr sta'],
+    'avf': ['act art frm'],
+    'avl': ['act art loc', 'act art log'],
+    'avr': ['act art evt rel', 'art rel'],
+    'avt': ['act art', 'act art atr', 'act art evt', 'act art pro', 'act art sta',
+            'act atr pho', 'art evt', 'art evt sta', 'art pro'],
+    'caa': ['art atr com'],
+    'cae': ['act art com', 'act art com psy', 'act art psy', 'act art psy sta',
+            'art com', 'art com psy', 'art com psy sta'],
+    'cea': ['act atr com', 'act atr com evt', 'act atr com psy', 'act atr com psy sta',
+            'act atr evt psy', 'act atr psy', 'act atr psy sta'],
+    'cel': ['cel'],
+    'cha': ['art chm', 'art chm sub'],
+    'chf': ['chm fod'],
+    'chm': ['chm', 'chm sta'],
+    'chp': ['chm plt'],
+    'coa': ['act com', 'act com evt', 'act com evt', 'act com evt psy', 'act com pro',
+            'act com psy', 'act com psy sta', 'act com rel', 'act com sta', 'com evt', 'com pro'],
+    'coh': ['com hum'],
+    'col': ['com log'],
+    'com': ['com', 'com psy', 'com psy sta', 'com rel', 'com sta'],
+    'con': ['act con evt', 'con evt', 'con'],
+    'ent': ['ent'],
+    'evs': ['evt pro', 'evt pro sta', 'evt sta'],
+    'evt': ['evt'],
+    'fac': ['act art fod', 'act fod'],
+    'fev': ['fod grs'],
+    'fod': ['atr fod', 'fod', 'fod frm', 'fod nat', 'fod qui', 'fod sta', 'fod sub'],
+    'frc': ['com frm', 'frm psy'],
+    'fre': ['act evt frm', 'act frm', 'act frm sta'],
+    'frm': ['atr frm', 'atr frm sta', 'frm', 'frm sta'],
+    'frt': ['art atr frm', 'art frm', 'art frm loc', 'art frm nat', 'art frm sta'],
+    'ftp': ['atr fod plt', 'atr fod plt sub'],
+    'gas': ['act grs', 'act com grs', 'act evt grs', 'act grs psy', 'act grs sta'],
+    'gbp': ['grb psy'],
+    'gbs': ['grb grs'],
+    'grb': ['grb'],
+    'grp': ['grp'],
+    'grq': ['grs qud'],
+    'grs': ['grp grs', 'grs', 'grs sta'],
+    'gsa': ['act art com grs', 'act art grs', 'act atr grs', 'act grp', 'art grs', 'art grs sub'],
+    'gsl': ['grs log'],
+    'gsp': ['grs psy', 'grs psy sta'],
+    'hue': ['act evt hum sta', 'act hum', 'evt hum', 'hum sta'],
+    'hum': ['grp hum', 'grp hum nat', 'grs hum', 'hum'],
+    'hup': ['hum psy'],
+    'lac': ['act loc', 'act log'],
+    'lap': ['art loc', 'art loc psy', 'art loc sta', 'com loc', 'com loc psy', 'loc psy', 'loc sta'],
+    'lfr': ['lfr'],
+    'lgg': ['grp log'],
+    'lme': ['lme', 'lme qud'],
+    'loc': ['art log sta', 'loc', 'log pos sta', 'log sta'],
+    'log': ['art log', 'log', 'log nat'],
+    'lon': ['loc nat'],
+    'lor': ['log rel'],
+    'mea': ['mea'],
+    'mic': ['mic'],
+    'naa': ['art nat'],
+    'nac': ['act art nat', 'art evt nat'],
+    'naf': ['frm nat'],
+    'naq': ['nat qui'],
+    'nat': ['nat', 'nat sub'],
+    'pan': ['art nat plt', 'art plt', 'art plt sub', 'plt sub'],
+    'pap': ['act atr pos psy'],
+    'pas': ['act atr pos', 'atr pos', 'atr pos rel', 'atr pos sta'],
+    'pgb': ['grb plt'],
+    'phm': ['act evt phm', 'act evt phm sta', 'act phm', 'act phm sta', 'evt phm',
+            'phm', 'phm pro', 'phm rel', 'phm sta'],
+    'pho': ['pho'],
+    'php': ['evt phm psy', 'phm psy'],
+    'phs': ['phm sub'],
+    'pht': ['atr phm'],
+    'plf': ['fod plt'],
+    'plt': ['fod nat plt', 'nat plt', 'nat plt sub', 'plt'],
+    'poa': ['act com evt pos', 'act evt pos', 'act pos', 'act pos psy', 'act pos psy sta', 'evt pos'],
+    'pom': ['com pos', 'act com pos', 'art com pos', 'atr com pos'],
+    'poq': ['pos qud'],
+    'pos': ['pos', 'pos pro', 'pos psy', 'pos sta'],
+    'prn': ['nat pro'],
+    'pro': ['pro'],
+    'prt': ['art fod prt', 'art frm prt', 'art prt', 'atr prt', 'atr prt sub', 'fod prt', 'frm prt',
+            'hum prt', 'nat prt', 'prt', 'prt qui', 'prt sta'],
+    'psa': ['act art pos', 'art pos'],
+    'psg': ['act grp psy', 'grp psy'],
+    'psr': ['pos rel'],
+    'psy': ['evt psy', 'evt psy sta', 'psy', 'psy sta'],
+    'pya': ['act evt psy', 'act evt psy sta', 'act psy', 'act psy rel', 'act psy sta'],
+    'qcc': ['qud sta'],
+    'qcs': ['com qud sta'],
+    'qde': ['act qud'],
+    'qie': ['act evt qui', 'act qui'],
+    'qud': ['qud'],
+    'qui': ['qui'],
+    'reg': ['grp rel'],
+    'rel': ['atr rel', 'atr psy rel', 'hum rel', 'psy rel', 'rel', 'rel sta'],
+    'saa': ['art sub', 'art atr sub', 'atr sub'],
+    'sas': ['act sta sub', 'act sub', 'sta sub'],
+    'spc': ['spc'],
+    'spe': ['act spc'],
+    'sta': ['sta'],
+    'sub': ['sub'],
+    'tme': ['sta tme', 'grp tme', 'phm tme', 'qud tme', 'tme'],
+    'tmt': ['atr tme'],
+    'tmv': ['act evt tme', 'act tme', 'evt tme']
+
+}
+
+
+def create_corelex_types_mapping():
+    mapping = {}
+    source_file = '../legacy/data/corelex_nouns.classes.txt'
+    for line in open(source_file):
+        line = line.strip()
+        if line.startswith('#') or not line:
+            continue
+        cltype, ptype = line.split("   ")
+        mapping.setdefault(cltype, []).append(ptype)
+    for cltype in sorted(mapping):
+        print("    '%s': %s," % (cltype, mapping[cltype]))
+
+
+if __name__ == '__main__':
+
+    create_corelex_types_mapping()
