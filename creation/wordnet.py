@@ -6,9 +6,9 @@
 
 import sys
 import textwrap
-from ansi_codes import blue, green, bold, boldgreen
-from utils import flatten
-              
+
+from utils import flatten, blue, green, bold, boldgreen
+
 NOUN = 'noun'
 VERB = 'verb'
 

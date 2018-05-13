@@ -10,7 +10,7 @@ $ python3 wn_browser.py <version> <category>
 
 import sys
 from wordnet import WordNet, NOUN, VERB
-from ansi_codes import BOLD, BLUE, RESET
+from utils import bold
 
 
 if sys.version_info.major < 3:
@@ -25,7 +25,7 @@ class UserLoop(object):
     SYNSET_MODE = 'SYNSET_MODE'
     STATS_MODE = 'STATS_MODE'
 
-    PROMPT = "\n%s>> %s" % (BOLD, RESET)
+    PROMPT = "\n%s " % bold('>>')
     
     def __init__(self, wordnet, category):
         self.wn = wordnet
@@ -86,7 +86,7 @@ class UserLoop(object):
         self.mapping = list(enumerate(self.synsets))
         self.mapping_idx = dict(self.mapping)
         self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
-        print("%s%s%s\n" % (BOLD, self.search_term, RESET))
+        print("%s\n" % bold(self.search_term))
         for count, synset in self.mapping:
             print("[%d]  %s" % (count, synset))
         self.print_choices()
