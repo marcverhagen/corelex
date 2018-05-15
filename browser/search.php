@@ -12,7 +12,8 @@ $noun = $_GET['noun'];
 
 $search_allowed = true;
 if ($noun) {
-  if (ctype_alpha($noun) or is_null($noun)) {
+  // using ctype_alpha was too restrictive
+  if (ctype_alpha($noun) or is_null($noun) or true) {
     $noun_types = db_get_noun_types($noun);
   } else {
     $search_allowed = false;

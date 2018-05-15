@@ -42,13 +42,14 @@ $last = null;
 foreach ($corelex_types as $t) {
   $current = $t->corelex_type;
   if ($last == $current) {
-    printf("<tr>\n");
+    printf("<tr valign=top>\n");
     printf("  <td>&nbsp\n");
   } else {
-    printf("<tr>\n");
+    printf("<tr valign=top>\n");
     printf("  <td><a href='view_type.php?id=%s'>%s</a>\n", $t->corelex_type, $t->corelex_type);
   }
-  printf("  <td>%s\n", $t->polysemous_type);
+  $ptype = str_replace(" ", "&nbsp;", $t->polysemous_type);
+  printf("  <td>%s\n", $ptype);
   printf("  <td>%s\n", util_collect_synsets($t->polysemous_type, $basic_types_idx));
   $last = $current;
 }
