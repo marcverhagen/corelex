@@ -70,7 +70,8 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 <?php
     foreach ($noun_types as $type) {
       $ct = $type->corelex_type;
-      $wn = sprintf("%s?s=%s", $wordnet_url, $noun);
+      $noun_search_term = str_replace("_", "%20", $noun);
+      $wn = sprintf("%s?s=%s", $wordnet_url, $noun_search_term);
       printf("<tr>\n");
       printf("  <td><a href='view_type.php?id=%s&noun=%s'>%s</a></td>\n", $ct, $noun, $ct);
       printf("  <td>%s</td>\n", $type->polysemous_type);
