@@ -4,4 +4,4 @@
 hostname = localhost
 username = corelex_user
 password = let_me_in_please
-database = corelex
+database = corelex-browser

@@ -1,11 +1,36 @@
-### Setting up the CoreLex browser site
+## Setting up the CoreLex browser site
 
-To create the browser you need to do the following:
+To create a CoreLex browser you need to do the following:
 
-1. Create the database tables. There is code to do this which will be added to this repository, but part of it requires local access to the old static CoreLex Browser site on the Brandeis Computer Science server. Since CoreLex is built mostly automatically from WordNet these static files could be created directly from WordNet, but this has not been done yet.
+1. Create the database tables
+2. Create a database
+3. Upload the browser to a server
+4. Configure access to the database
 
-2. Create a database, upload the schema and populate the tables. How to do this depends on your host set up. We have used MySQL.
+These notes concentrate on steps 2 through 4, for creating the database tables refer to the [legacy](../legacy/README.md) pages in this repository.
 
-3. Put the `browser` directory with all its contents on a server.
 
-4. Copy the file `config-default.txt` to `config.txt` and edit the contents as required by the host.
+#### Create a database
+
+How to do this depends on your host set up. For the browser at http://www.timeml.org/corelex/browser/ we have used MySQL and the instructions here assume MySQL and phpMyAdmin, but the essentials are the same for other relational databases and tools.
+
+Create a database named `corelex-browser` or any other name you desire. Use the `utf8mb4` character set and the `utf8mb4_bin` collation, although with WordNet you may probably get a way with the `latin1` defaults.
+
+Import the file `schema.sql` or cut and paste the contents into the phpMyAdmin SQL tab. Do the same with the three SQL files that contain the data (`corelex_nouns.basictypes.sql`, `corelex_nouns.classes.sql` and `corelex_nouns.sql`, as created by the code in the `legacy` directory). The last file may be too large for an import, if so, first try to gzip the file and if that still results in too large a file you need to ftp the file to the server and do a local import.
+
+```
+ mysql -u <USER_NAME> -p -D <DATABASE_NAME> < corelex_nouns.sql
+ ```
+
+#### Upload the browser to a server
+
+Put the `browser` directory with all its contents on the server either by uploading and unpacking an archive or by using git:
+
+```
+$ git clone https://github.com/marcverhagen/corelex
+```
+
+
+#### Configure access to the database
+
+Copy the file `config-default.txt` to `config.txt` and edit the contents as required by the host.
