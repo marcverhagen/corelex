@@ -124,60 +124,60 @@ BASIC_TYPES_1_5 = {
 
 BASIC_TYPES_3_1 = {
 
-    'abs': [('00002137', 'abstraction')],                      # new: psy; gone: time.03.0 space.03.0 
-    'act': [('00030657', 'act human_action human_activity')],  # similar, but many more subtypes
+    'abs': [('00002137', 'abstraction.03.0 abstract_entity.03.0')],                     # new: psy; gone: time.03.0 space.03.0
+    'act': [('00030657', 'act.03.0 deed.03.0 human_action.03.0 human_activity.03.0')],  # similar, but many more subtypes
     'agt': [('00007347', 'causal_agent.03.0 cause.03.0 causal_agency.03.0')],
     'anm': [('00015568', 'animal.03.0 animate_being.03.0 beast.03.0 brute.03.0 creature.03.0 fauna.03.0')],
-    'art': [('00022119', 'artifact artefact')],                # deeper embedded
-    'atr': [('00024444', 'attribute')],                        # many new subs: sta, spc, tme, frm 
+    'art': [('00022119', 'artifact.03.0 artefact.03.0')],                # deeper embedded
+    'atr': [('00024444', 'attribute.03.0')],                             # many new subs: sta, spc, tme, frm
     'cel': [('00006484', 'cell.03.0')],
-    'chm': [('14842408', 'compound chemical_compound'),        # deeper embedded
-            ('14647071', 'chemical_element element')],   
-    'com': [('00033319', 'communication')],                    # is now directly under abstraction
-    'con': [('11430739', 'consequence effect outcome result upshot')],
-    'ent': [('00001740', 'entity')],                           # is now the single top type
-    'evt': [('00029677', 'event')],                            # similar, but now includes act.03.0
-    'fod': [('00021445', 'food nutrient')],
-    'frm': [('00028005', 'shape form')],
-    'grb': [('07957410', 'biological_group')],
-    'grp': [('00031563', 'group grouping')],
-    'grs': [('07967506', 'social_group'),
-            ('07958392', 'people')],
+    'chm': [('14842408', 'compound.27.0 chemical_compound.27.0'),        # deeper embedded
+            ('14647071', 'chemical_element.27.0 element.27.0')],
+    'com': [('00033319', 'communication.03.0')],                         # is now directly under abstraction
+    'con': [('11430739', 'consequence.19.0 effect.19.0 outcome.19.0 result.19.0 event.19.1 issue.19.0 upshot.19.0')],
+    'ent': [('00001740', 'entity.03.0')],                           # is now the single top type
+    'evt': [('00029677', 'event.03.0')],                            # similar, but now includes act.03.0
+    'fod': [('00021445', 'food.03.0 nutrient.03.0')],
+    'frm': [('00028005', 'shape.03.0 form.03.0')],
+    'grb': [('07957410', 'biological_group.14.0')],
+    'grp': [('00031563', 'group.03.0 grouping.03.0')],
+    'grs': [('07967506', 'social_group.14.0'),
+            ('07958392', 'people.14.0')],
     'hum': [('00007846', 'person.03.0 individual.03.0 someone.03.0 somebody.03.0 mortal.03.0 soul.03.0')],
     'lfr': [('00004258', 'living_thing.03.0 animate_thing.03.0')],
        # used to be 'life_form organism being living_thing'
        # life_form was split off and made its own synset under {body.08.0, organic_structure.08.0}
        # organism.03.0 being.03.0 are now under living_thing.03.0
-    'lme': [('13624548', 'linear_unit linear__measure')],
+    'lme': [('13624548', 'linear_unit23.0 linear__measure.23.0')],
        # lme used to be 'linear_measure long_measure', long_measure is a hyponym
        # lme is now deeper in the hierarchy 
-    'loc': [('00027365', 'location')],                         # similar, but imaginary_place was moved to psy
-    'log': [('08648560', 'region')],                           # similar
-    'mea': [('00033914', 'measure quantity amount quantum')],  # last member is gone
-    'mic': [('01328932', 'microorganism.05.0 micro-organism.05.0')], # expanded synset
-    'nat': [('00019308', 'natural_object'),
-            ('09248053', 'body_of_water water'),
-            ('09357302', 'land dry_land earth ground solid_ground terra_firma')],
-    'phm': [('00034512', 'phenomenon')],                       # similar, but issue with pro subtype
+    'loc': [('00027365', 'location.03.0')],                           # similar, but imaginary_place was moved to psy
+    'log': [('08648560', 'region.15.1')],                             # similar
+    'mea': [('00033914', 'measure.03.0 quantity.03.0 amount.03.0')],  # last member (quantum) is gone
+    'mic': [('01328932', 'microorganism.05.0 micro-organism.05.0')],  # expanded synset
+    'nat': [('00019308', 'natural_object.03.0'),
+            ('09248053', 'body_of_water.17.0 water.17.0'),
+            ('09357302', 'land.17.0 dry_land.17.0 earth.17.1 ground.17.0 solid_ground.17.0 terra_firma.17.0')],
+    'phm': [('00034512', 'phenomenon.03.0')  ],                       # similar, but issue with pro subtype
     'pho': [('00001930', 'physical_entity.03.0')],
        # this is a new synset, the old 'object inanimate_object physical_object' is a hyponym
     'plt': [('00017402', 'plant.03.0 flora.03.0 plant_life.03.0')],
-    'pos': [('00032912', 'possession')],
+    'pos': [('00032912', 'possession.03.0')],
        # similar, but subtype ownership.21.0 is moved up to relation.03.0
-    'pro': [('00029976', 'process')],
+    'pro': [('00029976', 'process.03.0 physical_process.03.0')],
        # process.22.0 does not exist anymore, process.03.0 seems closest
     'prt': [('09408804', 'part.17.0 piece.17.0')],
-    'psy': [('00023280', 'psychological_feature')],
-    'qud': [('13597304', 'definite_quantity')],
-    'qui': [('13597558', 'indefinite_quantity')],
-    'rel': [('00032220', 'relation')],  
-    'spc': [('00028950', 'space')],                                           # very different now
-    'sta': [('00024900', 'state')],                                           # similar, but many more subtypes
+    'psy': [('00023280', 'psychological_feature.03.0')],
+    'qud': [('13597304', 'definite_quantity.23.0')],
+    'qui': [('13597558', 'indefinite_quantity.23.0')],
+    'rel': [('00032220', 'relation.03.0')],
+    'spc': [('00028950', 'space.03.0 infinite.03.0')],                        # very different now
+    'sta': [('00024900', 'state.03.0')],                                      # similar, but many more subtypes
     'sub': [('00021007', 'matter.03.0')],
        # used to be 'substance matter', but substance.03.0 is now a subtype
-    'tme': [('15137796', 'time_period period period_of_time amount_of_time'), # last member is gone
-            ('15179734', 'time_unit unit_of_time'),
-            ('00028468', 'time')]
+    'tme': [('15137796', 'time_period.28.0 period_of_time.28.0 period.28.0'), # amount_of_time is gone
+            ('15179734', 'time_unit.28.0 unit_of_time.28.0'),
+            ('00028468', 'time.03.0')]
 }
 
 

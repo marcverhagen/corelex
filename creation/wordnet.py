@@ -7,7 +7,10 @@
 import sys
 import textwrap
 
-from utils import flatten, blue, green, bold, boldgreen
+import cltypes
+from utils import flatten, blue, green, bold, boldgreen, index_file, data_file
+
+WORDNET_DIR = '/DATA/resources/lexicons/wordnet/WordNet-%s/'
 
 NOUN = 'noun'
 VERB = 'verb'
@@ -18,13 +21,19 @@ if sys.version_info.major < 3:
 
 class WordNet(object):
 
-    def __init__(self, wn_version, category,
-                 noun_index_file, noun_data_file,
-                 verb_index_file, verb_data_file):
+    def __init__(self, wn_version, category):
+
         self.version = wn_version
         self.category = category
         self.lemma_idx = { NOUN: {}, VERB: {} }
         self.synset_idx = { NOUN: {}, VERB: {} }
+
+        wn_dir = WORDNET_DIR % wn_version
+        noun_index_file = index_file(wn_dir, wn_version, 'noun')
+        noun_data_file = data_file(wn_dir, wn_version, 'noun')
+        verb_index_file = index_file(wn_dir, wn_version, 'verb')
+        verb_data_file = data_file(wn_dir, wn_version, 'verb')
+
         if category == NOUN:
             self._load_index(NOUN, noun_index_file)
             self._load_synsets(NOUN, noun_data_file)
@@ -68,9 +77,13 @@ class WordNet(object):
     def get_basic_types(self, cat):
         return [ss for ss in self.get_all_synsets(cat) if ss.basic_type]
     
-    def add_basic_types(self, cat, basic_types):
-        for name in basic_types:
-            for synset, members in basic_types[name]:
+    def add_basic_types(self, cat):
+        if self.version == '1.5':
+            btypes = cltypes.BASIC_TYPES_1_5
+        elif self.version == '3.1':
+            btypes = cltypes.BASIC_TYPES_3_1
+        for name in btypes:
+            for synset, members in btypes[name]:
                 #print(name, '-', synset, '-', members)
                 self.get_synset(cat, synset).make_basic_type(name)
 

@@ -1,5 +1,5 @@
 
-CONNECTING on JustHost
+USING JustHost
 
 Run some SQL:
 
@@ -19,6 +19,10 @@ mysql> show tables
 mysql> help contents
 mysql> help administration
 
+
+USING timeml.org
+
+$ mysql -p -u xtimeml -h MySQL.timeml.org xtimeml-corelex < nouns.sql
 
 
 ADDING INDEXES:

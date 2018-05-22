@@ -10,7 +10,7 @@ $ python3 wn_browser.py <version> <category>
 
 import sys
 from wordnet import WordNet, NOUN, VERB
-from utils import bold
+from utils import index_file, data_file, bold
 
 
 if sys.version_info.major < 3:
@@ -146,25 +146,8 @@ if __name__ == '__main__':
 
     wn_version = sys.argv[1]
     category = sys.argv[2]
-    
-    # TODO: this should not be hard-coded
-    wn_dir = "/DATA/resources/lexicons/wordnet/WordNet-%s/" % wn_version
-
-    if wn_version == '1.5':
-        noun_index_file = wn_dir + 'wn15/DICT/NOUN.IDX'
-        noun_data_file = wn_dir + 'wn15/DICT/NOUN.DAT'
-        verb_index_file = wn_dir + 'wn15/DICT/VERB.IDX'
-        verb_data_file = wn_dir + 'wn15/DICT/VERB.DAT'
-    elif wn_version in ('3.0', '3.1'):
-        noun_index_file = wn_dir + 'dict/index.noun'
-        noun_data_file = wn_dir + 'dict/data.noun'
-        verb_index_file = wn_dir + 'dict/index.verb'
-        verb_data_file = wn_dir + 'dict/data.verb'
-    else:
+    if not wn_version in ('1.5', '3.1'):
         exit("ERROR: unsupported wordnet version")
 
-    wn = WordNet(wn_version, category,
-                 noun_index_file, noun_data_file,
-                 verb_index_file, verb_data_file)
+    wn = WordNet(wn_version, category)
     UserLoop(wn, category)
-

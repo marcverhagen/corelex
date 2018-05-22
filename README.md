@@ -1,6 +1,6 @@
-# CoreLex
+# CoreLex2
 
-CoreLex is a lexicon of nouns structured around systematic polysemy as found in WordNet. The original CoreLex was developed in the late nineties by Paul Buitelaar in his dissertation (*CoreLex: Systematic Polysemy and Underspecification*, PhD Thesis, Computer Science, Brandeis University, February 1998).
+CoreLex2 is a lexicon of nouns structured around systematic polysemy as found in WordNet. The original CoreLex was developed in the late nineties by Paul Buitelaar in his dissertation (*CoreLex: Systematic Polysemy and Underspecification*, PhD Thesis, Computer Science, Brandeis University, February 1998).
 
 CoreLex2 is a follow up project that expands on CoreLex.
 
