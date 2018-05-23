@@ -1,24 +1,25 @@
 <?php
 
-require('database.php');
-require('utils.php');
+include 'debugging.php';
+include 'utils.php';
+include 'database.php';
 
-db_connect();
-
-$DEBUG = true;
-$DEBUG = false;
+$connection = db_connect();
 
 $noun = $_GET['noun'];
 
 $search_allowed = true;
 if ($noun) {
-  // using ctype_alpha was too restrictive
-  if (ctype_alpha($noun) or is_null($noun) or true) {
-    $noun_types = db_get_noun_types($noun);
-  } else {
-    $search_allowed = false;
-  }
+    // using ctype_alpha was too restrictive
+    if (ctype_alpha($noun) or is_null($noun) or true) {
+        $noun_types = db_get_noun_types($connection, $noun);
+        //dbg($noun_types);
+    } else {
+        $search_allowed = false;
+    }
 }
+
+$connection->close();
 
 $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
@@ -37,14 +38,6 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
 <?php util_write_navigation(); ?>
 
-<?php
-  if ($DEBUG) {
-    printf("<pre>\n");
-    print_r($noun_types);
-    printf("</pre>\n");
-  }
-?>
-
 <p>
   <form action="search.php">
   Enter a nominal:
@@ -52,12 +45,12 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
   <input type="submit" value="search">
   </form>
 </p>
-  
-<?php 
-  if (! $search_allowed) {
+
+<?php
+if (! $search_allowed) {
     printf("<p class='warning'>WARNING: search term '%s' is not allowed, use letters only.</p>\n", $noun);
-  } else if ($noun and $noun_types) {
-    printf("<p><b>$noun</b></p>"); 
+} else if ($noun and $noun_types) {
+    printf("<p><b>$noun</b></p>");
 ?>
 
 <p>
@@ -82,13 +75,13 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 </table>
 
 <?php
-  } else if ($noun) {
+} else if ($noun) {
 ?>
 
 <p>Did not find <b><?php echo $noun ?></b> in CoreLex</p>
 
 <?php
-  }
+}
 ?>
 
 </body>

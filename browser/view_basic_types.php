@@ -1,11 +1,12 @@
 <?php
 
-require('utils.php'); 
-require('database.php'); 
+include 'debugging.php';
+include 'utils.php';
+include 'database.php';
 
-db_connect();
-
-$basic_types = db_get_basic_types();
+$connection = db_connect();
+$basic_types = db_get_basic_types($connection);
+$connection ->close();
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">

@@ -13,9 +13,9 @@ function dbg($object)
   if (is_object($object) or is_array($object)) {
     echo "<pre>\n";
     print_r($object);
-    echo "</pre>\n"; 
+    echo "</pre>\n";
   } else {
-    echo "<pre>$object</pre>\n";		
+    echo "<pre>$object</pre>\n";
   }
 }
 

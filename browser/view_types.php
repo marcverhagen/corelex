@@ -1,12 +1,13 @@
 <?php
 
-require('database.php');
-require('utils.php');
+include 'debugging.php';
+include 'utils.php';
+include 'database.php';
 
-db_connect();
+$connection = db_connect();
 
-$corelex_types = db_get_corelex_types();
-$basic_types = db_get_basic_types();
+$corelex_types = db_get_corelex_types($connection);
+$basic_types = db_get_basic_types($connection);
 $basic_types_idx = array();
 foreach ($basic_types as $bt) {
   $basic_types_idx[$bt->basic_type] = $bt;

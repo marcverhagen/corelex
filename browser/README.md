@@ -33,4 +33,4 @@ $ git clone https://github.com/marcverhagen/corelex
 
 #### Configure access to the database
 
-Copy the file `config-default.txt` to `config.txt` and edit the contents as required by the host.
+Copy the file `connection-sample.php` to `connection.php` and edit the contents as required by the host.

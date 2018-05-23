@@ -1,22 +1,24 @@
 <?php
 
-require('database.php');
-require('utils.php');
+include 'debugging.php';
+include 'utils.php';
+include 'database.php';
 
-db_connect();
+$connection = db_connect();
 
 $type_name = $_GET['id'];
 $searched_noun = $_GET['noun'];
 
-$corelex_type = db_get_corelex_type($type_name);
+$corelex_type = db_get_corelex_type($connection, $type_name);
 
-$basic_types = db_get_basic_types();
+$basic_types = db_get_basic_types($connection);
 $basic_types_idx = array();
-foreach ($basic_types as $bt) {
-  $basic_types_idx[$bt->basic_type] = $bt;
-}
+foreach ($basic_types as $bt)
+    $basic_types_idx[$bt->basic_type] = $bt;
 
-$nouns = db_get_nouns($type_name);
+$nouns = db_get_nouns($connection, $type_name);
+
+$connection->close();
 
 $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
@@ -33,7 +35,7 @@ $wordnet_url = 'http://wordnetweb.princeton.edu/perl/webwn'
 
 <!--
 <pre>
-<?php 
+<?php
   //print_r($corelex_type);
   //print_r($nouns); ?>
 </pre>

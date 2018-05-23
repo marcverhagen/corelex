@@ -1,7 +1,0 @@
-# Example config file with mostly bogus values. Copy this file to
-# config.txt and add real values.
-
-hostname = localhost
-username = corelex_user
-password = let_me_in_please
-database = corelex-browser
