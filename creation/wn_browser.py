@@ -30,8 +30,8 @@ class UserLoop(object):
     def __init__(self, wordnet, category):
         self.wn = wordnet
         self.category = category
-        self.lemma_idx = wordnet.lemma_idx
-        self.synset_idx = wordnet.synset_idx
+        self.lemma_idx = wordnet.lemma_index()
+        self.synset_idx = wordnet.synset_index()
         self.mode = UserLoop.MAIN_MODE
         self.search_term = None
         self.mapping = []
@@ -88,7 +88,7 @@ class UserLoop(object):
         self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
         print("%s\n" % bold(self.search_term))
         for count, synset in self.mapping:
-            print("[%d]  %s" % (count, synset))
+            print("[%d]  %s" % (count, synset.as_formatted_string()))
         self.print_choices()
         choice = input(UserLoop.PROMPT)
         if choice == 'q':
@@ -110,7 +110,6 @@ class UserLoop(object):
             print("[%s]  %s" % (choice, description))
 
     def synset_mode(self):
-        #print(self, self.synset)
         self.synset.pp()
         self.choices = [('b', 'back to the word'), ('s', 'search'), ('h', 'home'), ('q', 'quit') ]
         self.print_choices()
