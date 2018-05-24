@@ -19,7 +19,7 @@ Create a database named `corelex-browser` or any other name you desire. Use the 
 Import the file `schema.sql` or cut and paste the contents into the phpMyAdmin SQL tab. Do the same with the three SQL files that contain the data (`corelex_nouns.basictypes.sql`, `corelex_nouns.classes.sql` and `corelex_nouns.sql`, as created by the code in the `legacy` directory). The last file may be too large for an import, if so, first try to gzip the file and if that still results in too large a file you need to ftp the file to the server and do a local import.
 
 ```
- mysql -u <USER_NAME> -p -D <DATABASE_NAME> < corelex_nouns.sql
+ $ mysql -u <USER_NAME> -p -D <DATABASE_NAME> < corelex_nouns.sql
  ```
 
 #### Upload the browser to a server

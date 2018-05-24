@@ -6,3 +6,4 @@ corelex.txt
 tmp.*
 __pycache__
 legacy/data/*sql
+browser/connection.php

@@ -36,6 +36,6 @@ data/corelex_nouns.classes.sql
 data/corelex_nouns.basictypes.sql
 ```
 
-The intermediary file and the three SQL files are also included in the repository so typically there is no need to run the commands above.
-
 The SQL files can be used to populate the database that the CoreLex browser points at, see the [browser](../browser/README.md) directory in this repository for more details on setting up a CoreLex browser.
+
+The intermediary file is included in the repository, but the three SQL files are not so if you want to create a browser you will need to run the python scripts above.

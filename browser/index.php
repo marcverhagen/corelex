@@ -20,7 +20,7 @@
    <i>CoreLex: Systematic Polysemy and Underspecification</i>,<br/>
    PhD Thesis, Computer Science, Brandeis University, February 1998.
 </blockquote>
-  
+
 <p>CoreLex is available for download at <a href="http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html">http://www.cs.brandeis.edu/~paulb/CoreLex/corelex.html</a>, which also has a link to an old CoreLex Browser.</p>
 
 <p>The browser here has the following components, accessible via the links at the top of this page:</p>
@@ -31,7 +31,7 @@
 
    <li>A list of basic types dervied from WordNet 1.5.</li>
 
-   <li>A search function where you can enter a noun and which will result the CoreLex type for that noun.</li>
+   <li>A search function where you can enter a noun and which will show the CoreLex type for that noun. Note that CoreLex only includes single-token nouns, phrases are not included.</li>
 
 </ol>
 
