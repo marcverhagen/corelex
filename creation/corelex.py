@@ -344,7 +344,31 @@ def scratch(version, category):
 
     """For whatever I am experimenting with."""
 
-    pass
+    # Collecting all relations and then turn them into relations between basic types.
+
+    wn = WordNet(version, category)
+    wn.add_nominal_basic_types()
+    wn.pp_nouns(['abstraction', 'door', 'woman', 'chicken', 'aachen'])
+
+    bt_relations = wn.get_all_basic_type_relations(NOUN)
+    print(len(bt_relations))
+
+    bt_relation_index = {}
+    for bt_relation in bt_relations:
+        pair = (bt_relation[0], bt_relation[2])
+        rel = bt_relation[1]
+        if pair not in bt_relation_index:
+            #print(rel, pair)
+            bt_relation_index[pair] = {}
+        bt_relation_index[pair][rel] = bt_relation_index[pair].get(rel, 0) + 1
+
+    fh = open('tmp-basic-type-relations.txt', 'w')
+    for pair in sorted(bt_relation_index.keys()):
+        if pair[0] != pair[1]:
+            d = ' '.join(["(%s %s)" % (k, v) for k,v in bt_relation_index[pair].items()])
+            fh.write("%s-%s  %s\n" % (pair[0], pair[1], d))
+
+
 
 if __name__ == '__main__':
 

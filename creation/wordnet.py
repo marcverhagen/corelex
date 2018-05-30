@@ -265,6 +265,29 @@ class WordNet(object):
                         self._all_relations.append([synset, pointer])
         return self._all_relations
 
+    def get_all_basic_type_relations(self, cat):
+        """Return a list of triples of the form <basic_type_name, pointer_symbol,
+        basic_type_name>. There is a at least one triple for each relation
+        amongst nominal synsets with the synsets replaced by the name of the
+        basic types. If one of the synsets has two or more basic types, than a
+        basic type relation will be cretaed for each of them. In this case, all
+        basic types are used, not just the filtered ones."""
+        relations = self.get_all_relations(NOUN)
+        bt_relations = []
+        for source_synset, pointer in relations:
+            if pointer.symbol in ('~', '@', '@i'):
+                continue
+            target_synset = self.get_noun_synset(pointer.target_synset)
+            # some pointers are not to nouns, skip them
+            if target_synset is None:
+                continue
+            # for this we use the basic types and not the filtered basic types since
+            # we want to get the relations at all levels
+            for bts in source_synset.basic_types:
+                for btt in target_synset.basic_types:
+                    bt_relations.append([bts, pointer.symbol, btt])
+        return bt_relations
+
     def display_basic_type_isa_relations(self):
         """Utility method to generate all subtype-supertype pairs amongst basic
         types. Results from this can be hand-fed into the cltypes module."""
