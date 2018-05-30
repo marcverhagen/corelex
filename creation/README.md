@@ -1,4 +1,4 @@
-## Creating CoreLex2
+## Creating CoreLex and CoreLex2
 
 Modules in this directory give access to WordNet, create CoreLex from WordNet, export CoreLex and allow command-line browsing of WordNet and CoreLex.
 

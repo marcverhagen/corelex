@@ -9,7 +9,7 @@ $ python3 wn_browser.py <version> <category>
 
 
 import sys
-from wordnet import WordNet, NOUN, VERB
+from wordnet import WordNet, NOUN, VERB, expand
 from utils import index_file, data_file, bold
 
 
@@ -29,7 +29,7 @@ class UserLoop(object):
     
     def __init__(self, wordnet, category):
         self.wn = wordnet
-        self.category = category
+        self.category = expand(category)
         self.lemma_idx = wordnet.lemma_index()
         self.synset_idx = wordnet.synset_index()
         self.mode = UserLoop.MAIN_MODE
@@ -81,8 +81,10 @@ class UserLoop(object):
                 print("Not in WordNet")
                 
     def word_mode(self):
-        synsets_offsets = self.lemma_idx[self.category].get(self.search_term)
-        self.synsets = [self.wn.get_synset(self.category, off) for off in synsets_offsets]
+        #synsets_offsets = self.lemma_idx[self.category].get(self.search_term)
+        word = self.lemma_idx[self.category].get(self.search_term)
+        #self.synsets = [self.wn.get_synset(self.category, off) for off in synsets_offsets]
+        self.synsets = [self.wn.get_synset(self.category, off) for off in word.synsets]
         self.mapping = list(enumerate(self.synsets))
         self.mapping_idx = dict(self.mapping)
         self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]

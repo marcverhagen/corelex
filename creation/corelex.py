@@ -38,8 +38,8 @@ This creates two files:
    sql/corelex-1.5-basic-types-nouns.sql
    sql/corelex-1.5-lemmas-nouns.sql
 
-These can be imported into the database of the online CoreLex browser. Note we
-do not create a table for CoreLex types.
+These can be imported into the database of the online CoreLex browser. Note that
+we do not create a table for CoreLex types.
 
 This does not yet work for verbs.
 
@@ -57,15 +57,24 @@ import pprint
 import textwrap
 import io
 
-from wordnet import WordNet, NOUN, VERB
+from wordnet import WordNet, NOUN, VERB, expand
 import cltypes
 from utils import index_file, data_file, flatten, bold
+
+
+def get_basic_types(synsets):
+    basic_types = set()
+    for synset in synsets:
+        for bt in synset.basic_types:
+            basic_types.add(bt)
+    return basic_types
 
 
 def filter_basic_types(set_of_basic_types, type_relations):
     for (subtype, supertype) in type_relations:
         if subtype in set_of_basic_types and supertype in set_of_basic_types:
             set_of_basic_types.discard(supertype)
+
 
 def print_usage():
     print("\nUsage:\n",
@@ -76,11 +85,8 @@ def print_usage():
 
 class CoreLex(object):
 
-    # TODO: distinguish between version that creates corelex from wordnet and
-    # version that reads corelex from files (now we only have the former)
-
     def __init__(self, version='1.5', category=NOUN, wordnet=None):
-        self.category = category
+        self.category = expand(category)
         self.version = version
         self.word_index = {}
         self.class_index = {}
@@ -96,18 +102,11 @@ class CoreLex(object):
         self.wordnet = wordnet
         self.wn_lemma_idx = wordnet.lemma_index()
         self.wn_synset_idx = wordnet.synset_index()
-        print("Creating CoreLex...")
         type_relations = self._get_type_relations()
-        for word in sorted(self.wn_lemma_idx[NOUN].keys()):
-            synsets = self.wn_lemma_idx[NOUN][word]
-            synsets = [wordnet.get_noun_synset(synset) for synset in synsets]
-            basic_types = set()
-            for synset in synsets:
-                path = synset.paths_to_top()
-                synsets = flatten(path)
-                for synset in synsets:
-                    if synset.basic_type:
-                        basic_types.add(synset.basic_type)
+        for lemma in sorted(self.wn_lemma_idx[NOUN].keys()):
+            word = self.wordnet.get_noun(lemma)
+            synsets = [wordnet.get_noun_synset(synset) for synset in word.synsets]
+            basic_types = get_basic_types(synsets)
             filter_basic_types(basic_types, type_relations)
             corelex_class = ' '.join(sorted(basic_types))
             self.word_index[word] = corelex_class
@@ -136,13 +135,15 @@ class CoreLex(object):
         return cltypes.BASIC_TYPES_ISA_RELATIONS_3_1
 
     def write(self, filename):
-        print("Writing CoreLex compactly to", filename)
+        print("Writing CoreLex to", filename)
         fh = open(filename, 'w')
         for cl_class in sorted(self.class_index.keys()):
-            fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
+            lemmas = [w.lemma for w in self.class_index[cl_class]]
+            fh.write("%s\t%s\n" % (cl_class, ' '.join(lemmas)))
 
     def write_tables(self):
-        basic_types_sql = "sql/corelex-%s-basic-types-%ss.sql" % (self.version, self.category)
+        basic_types_sql = "sql/corelex-%s-basic-types-%ss.sql" \
+                          % (self.version, self.category)
         nouns_sql = "sql/corelex-%s-lemmas-%ss.sql" % (self.version, self.category)
         if self.version == "1.5":
             basic_types = cltypes.BASIC_TYPES_1_5
@@ -165,19 +166,21 @@ class CoreLex(object):
         for word in self.word_index:
             pclass = self.word_index[word]
             cltype = self.class_to_corelex_type.get(pclass, '-')
-            string_buffer.write("   ('%s', '%s', '%s'),\n" % (word.replace("'", r"\'"), cltype, pclass))
+            string_buffer.write("   ('%s', '%s', '%s'),\n"
+                                % (word.replace("'", r"\'"), cltype, pclass))
         noun_table.write(string_buffer.getvalue()[:-2] + ";\n")
         noun_table.close()
         print("Wrote %d types to file %s" % (len(basic_types), basic_types_sql))
         print("Wrote %d words to file %s\n" % (len(self.word_index), nouns_sql))
 
     def pp(self, filename):
-        print("Writing CoreLex verbosely to", filename)
+        print("Writing CoreLex to", filename)
         fh = open(filename, 'w')
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         for cl_class in sorted(self.class_index.keys()):
             fh.write("%s\n\n" % cl_class)
-            for line in tw.wrap(' '.join(self.class_index[cl_class])):
+            lemmas = [w.lemma for w in self.class_index[cl_class]]
+            for line in tw.wrap(' '.join(lemmas)):
                 fh.write(line + "\n")
             fh.write("\n")
 
@@ -199,29 +202,23 @@ class CoreLexVerbs(object):
         self.word_index = {}
         self.class_index = {}
         print("Creating CoreLex...")
-        for word in sorted(self.wn_lemma_idx[VERB].keys()):
-            synsets = self.wn_lemma_idx[VERB][word]
-            synsets = [wordnet.get_synset(VERB, synset) for synset in synsets]
-            basic_types = set()
-            for synset in synsets:
-                path = synset.paths_to_top()
-                synsets = flatten(path)
-                for synset in synsets:
-                    if synset.basic_type:
-                        basic_types.add(synset.basic_type)
+        for lemma in sorted(self.wn_lemma_idx[VERB].keys()):
+            word = self.wordnet.get_verb(lemma)
+            synsets = [wordnet.get_synset(VERB, synset) for synset in word.synsets]
+            basic_types = get_basic_types(synsets)
             corelex_class = ' * '.join(sorted(basic_types))
-            self.word_index[word] = corelex_class
-            self.class_index.setdefault(corelex_class, []).append(word)
+            self.word_index[lemma] = corelex_class
+            self.class_index.setdefault(corelex_class, []).append(lemma)
 
     def write(self, filename):
-        print("Writing CoreLex compactly to", filename)
+        print("Writing CoreLex to", filename)
         fh = open(filename, 'w')
         for cl_class in sorted(self.class_index.keys()):
             if '*' in cl_class and len(self.class_index[cl_class]) > 4:
                 fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
 
     def pp(self, filename):
-        print("Writing CoreLex verbosely to", filename)
+        print("Writing CoreLex to", filename)
         fh = open(filename, 'w')
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         for cl_class in sorted(self.class_index.keys()):
@@ -254,7 +251,6 @@ class UserLoop(object):
 
     def run(self):
         while True:
-            #print()
             if self.mode == UserLoop.MAIN_MODE:
                 self.main_mode()
             elif self.mode == UserLoop.SEARCH_MODE:
@@ -329,19 +325,26 @@ def create_corelex_from_wordnet(version, category):
         exit("ERROR: unsupported wordnet version")
     if not category in ('n', 'v'):
         exit("ERROR: unsupported category")
-    wncat = NOUN if category == 'n' else VERB
-    wn = WordNet(version, wncat)
+    wn = WordNet(version, category)    
     if category == 'n':
-        wn.add_basic_types(NOUN)
-        cl = CoreLex(category=wncat, version=version)
+        print("Adding basic types...")
+        wn.add_nominal_basic_types()
+        print("Creating CoreLex...")
+        cl = CoreLex(category=category, version=version, wordnet=wn)
         cl.write("data/corelex-%s-nouns.tab" % version)
-        cl.pp("data/corelex-%s-nouns-txt" % version)
+        cl.pp("data/corelex-%s-nouns.txt" % version)
     elif category == 'v':
-        wn.set_verbal_basic_types()
+        wn.add_verbal_basic_types()
         cl = CoreLexVerbs(wn)
         cl.write("data/corelex-%s-verbs.tab" % version)
         cl.pp("data/corelex-%s-verbs.txt" % version)
 
+
+def scratch(version, category):
+
+    """For whatever I am experimenting with."""
+
+    pass
 
 if __name__ == '__main__':
 
@@ -368,6 +371,9 @@ if __name__ == '__main__':
         else:
             exit("This does not work for verbs yet")
         UserLoop(cl)
+
+    elif sys.argv[1] == '-s':
+        scratch(version, category)
 
     else:
         print_usage()

@@ -1,7 +1,7 @@
 """Basic types and Corelex types
 
 Contains the synsets from WordNet that are used as basic types for CoreLex and
-the definitions of CoreLex types.
+the definition of CoreLex types.
 
 
 == Basic Types
@@ -21,15 +21,16 @@ is defined as:
  	act rel sta     act human_action human_activity relation state
  	act rel	        act human_action human_activity relation
 
-For all basic types, the mapping to synsets was changed. In most cases (TO BE
-DETERMINED), the mapping was to the same synset but the synset identifier (which
-is the byte offset in the WordNet data) file had to be updated.
+For all basic types, the mapping to synsets was changed. In most cases, the
+mapping was to the same synset but the synset identifier (which is the byte
+offset in the WordNet data) file had to be updated.
 
 Strategy:
 - do this on a case by case basis, looking at each top level type
 - for each basic type, find the synset in WN3.1
    - use the number from the lexicographer file
-   - for example, the frm basic type in WN1.5 maps to the {shape.03.0 form.03.0} synset
+   - for example, the frm basic type in WN1.5 maps to the
+     {shape.03.0 form.03.0} synset
    - try to find the same one in WN3.1
 - check the definition and the subtypes
    - if they are similar, just update the identifier
@@ -39,11 +40,37 @@ Strategy:
       - find closest based on subtypes
 
 From WordNet 1.5 to WordNet 3.1 the noun hierarchy has changed. For example,
-there is no a set of 11 toptypes anymore, instead there is only one toptype in
+there is not a set of 11 toptypes anymore, instead there is only one toptype in
 entity.03.0. Almost all basic types from 1.5 were also in 3.1 but there were few
 types that pointed to synsets that were split up and even one that did not exist
 any more (process.22.0). In many case the synset was at a different position in
-the hierarchy.
+the hierarchy. Here is a list of remarks on the new basic types:
+
+   abs: psy is new, gone are time.03.0 space.03.0
+   act: similar, but many more subtypes
+   art: deeper embedded
+   atr: many new subs: sta, spc, tme, frm
+   chm: first synset is deeper embedded
+   com: is now directly under abstraction
+   ent: is now the single top type
+   evt: similar, but now includes act.03.0
+   lfr: used to be 'life_form organism being living_thing'
+        life_form was split off and made its own synset under
+        {body.08.0, organic_structure.08.0}
+        organism.03.0 being.03.0 are now under living_thing.03.0
+   lme: used to be 'linear_measure long_measure', long_measure is a hyponym
+        is now deeper in the hierarchy
+   loc: similar, but imaginary_place was moved to psy
+   mea: last member (quantum) is gone
+   mic: expanded synset
+   phm: similar, but issue with pro subtype
+   pho: this is a new synset, the old 'object inanimate_object physical_object'
+        is a hyponym
+   pos: similar, but subtype ownership.21.0 is moved up to relation.03.0
+   pro: process.22.0 does not exist anymore, process.03.0 seems closest
+   spc: very different now
+   sta: similar, but many more subtypes
+   sub: used to be 'substance matter', but substance.03.0 is now a subtype
 
 
 == Subsumption among basic types
@@ -56,7 +83,7 @@ is more specific than the second.
 
 The pairs for 1.5 were created manually from the hierarchy pictures in Paul
 Buitelaar's dissertations. The ones for 3.1 were created by a utility method in
-the wordnet module: WordNet.display_basic_type_relations().
+the wordnet module: WordNet.display_basic_type_isa_relations().
 
 
 == CoreLex Types
@@ -68,6 +95,14 @@ for the new version of CoreLex we can reuse the CoreLex types. The types are
 listed in ../legacy/data/corelex_nouns.classes.txt and the CORELEX_TYPES
 variable is created from that file using the create_corelex_types_mapping()
 function.
+
+However, the CoreLex types were defined to encompass the polysemous types that
+were generated from WordNet 1.5, and since the hierarchy changed the polysemous
+types for WordNet 3.1 are different and not all of them are covered by the
+CoreLex types.
+
+TODO: need to semi-automatically deal with the polysemous types that are not
+associated with a CoreLex type.
 
 """
 
@@ -124,19 +159,19 @@ BASIC_TYPES_1_5 = {
 
 BASIC_TYPES_3_1 = {
 
-    'abs': [('00002137', 'abstraction.03.0 abstract_entity.03.0')],                     # new: psy; gone: time.03.0 space.03.0
-    'act': [('00030657', 'act.03.0 deed.03.0 human_action.03.0 human_activity.03.0')],  # similar, but many more subtypes
+    'abs': [('00002137', 'abstraction.03.0 abstract_entity.03.0')],
+    'act': [('00030657', 'act.03.0 deed.03.0 human_action.03.0 human_activity.03.0')],
     'agt': [('00007347', 'causal_agent.03.0 cause.03.0 causal_agency.03.0')],
     'anm': [('00015568', 'animal.03.0 animate_being.03.0 beast.03.0 brute.03.0 creature.03.0 fauna.03.0')],
-    'art': [('00022119', 'artifact.03.0 artefact.03.0')],                # deeper embedded
-    'atr': [('00024444', 'attribute.03.0')],                             # many new subs: sta, spc, tme, frm
+    'art': [('00022119', 'artifact.03.0 artefact.03.0')],
+    'atr': [('00024444', 'attribute.03.0')],
     'cel': [('00006484', 'cell.03.0')],
-    'chm': [('14842408', 'compound.27.0 chemical_compound.27.0'),        # deeper embedded
+    'chm': [('14842408', 'compound.27.0 chemical_compound.27.0'),
             ('14647071', 'chemical_element.27.0 element.27.0')],
-    'com': [('00033319', 'communication.03.0')],                         # is now directly under abstraction
+    'com': [('00033319', 'communication.03.0')],
     'con': [('11430739', 'consequence.19.0 effect.19.0 outcome.19.0 result.19.0 event.19.1 issue.19.0 upshot.19.0')],
-    'ent': [('00001740', 'entity.03.0')],                           # is now the single top type
-    'evt': [('00029677', 'event.03.0')],                            # similar, but now includes act.03.0
+    'ent': [('00001740', 'entity.03.0')],
+    'evt': [('00029677', 'event.03.0')],
     'fod': [('00021445', 'food.03.0 nutrient.03.0')],
     'frm': [('00028005', 'shape.03.0 form.03.0')],
     'grb': [('07957410', 'biological_group.14.0')],
@@ -145,36 +180,27 @@ BASIC_TYPES_3_1 = {
             ('07958392', 'people.14.0')],
     'hum': [('00007846', 'person.03.0 individual.03.0 someone.03.0 somebody.03.0 mortal.03.0 soul.03.0')],
     'lfr': [('00004258', 'living_thing.03.0 animate_thing.03.0')],
-       # used to be 'life_form organism being living_thing'
-       # life_form was split off and made its own synset under {body.08.0, organic_structure.08.0}
-       # organism.03.0 being.03.0 are now under living_thing.03.0
     'lme': [('13624548', 'linear_unit23.0 linear__measure.23.0')],
-       # lme used to be 'linear_measure long_measure', long_measure is a hyponym
-       # lme is now deeper in the hierarchy 
-    'loc': [('00027365', 'location.03.0')],                           # similar, but imaginary_place was moved to psy
-    'log': [('08648560', 'region.15.1')],                             # similar
-    'mea': [('00033914', 'measure.03.0 quantity.03.0 amount.03.0')],  # last member (quantum) is gone
-    'mic': [('01328932', 'microorganism.05.0 micro-organism.05.0')],  # expanded synset
+    'loc': [('00027365', 'location.03.0')],
+    'log': [('08648560', 'region.15.1')],
+    'mea': [('00033914', 'measure.03.0 quantity.03.0 amount.03.0')],
+    'mic': [('01328932', 'microorganism.05.0 micro-organism.05.0')],
     'nat': [('00019308', 'natural_object.03.0'),
             ('09248053', 'body_of_water.17.0 water.17.0'),
             ('09357302', 'land.17.0 dry_land.17.0 earth.17.1 ground.17.0 solid_ground.17.0 terra_firma.17.0')],
-    'phm': [('00034512', 'phenomenon.03.0')  ],                       # similar, but issue with pro subtype
+    'phm': [('00034512', 'phenomenon.03.0')  ],
     'pho': [('00001930', 'physical_entity.03.0')],
-       # this is a new synset, the old 'object inanimate_object physical_object' is a hyponym
     'plt': [('00017402', 'plant.03.0 flora.03.0 plant_life.03.0')],
     'pos': [('00032912', 'possession.03.0')],
-       # similar, but subtype ownership.21.0 is moved up to relation.03.0
     'pro': [('00029976', 'process.03.0 physical_process.03.0')],
-       # process.22.0 does not exist anymore, process.03.0 seems closest
     'prt': [('09408804', 'part.17.0 piece.17.0')],
     'psy': [('00023280', 'psychological_feature.03.0')],
     'qud': [('13597304', 'definite_quantity.23.0')],
     'qui': [('13597558', 'indefinite_quantity.23.0')],
     'rel': [('00032220', 'relation.03.0')],
-    'spc': [('00028950', 'space.03.0 infinite.03.0')],                        # very different now
-    'sta': [('00024900', 'state.03.0')],                                      # similar, but many more subtypes
+    'spc': [('00028950', 'space.03.0 infinite.03.0')],
+    'sta': [('00024900', 'state.03.0')],
     'sub': [('00021007', 'matter.03.0')],
-       # used to be 'substance matter', but substance.03.0 is now a subtype
     'tme': [('15137796', 'time_period.28.0 period_of_time.28.0 period.28.0'), # amount_of_time is gone
             ('15179734', 'time_unit.28.0 unit_of_time.28.0'),
             ('00028468', 'time.03.0')]
@@ -275,7 +301,8 @@ CORELEX_TYPES = {
     'arh': ['art hum'],
     'arp': ['art psy', 'art psy sta'],
     'art': ['art', 'art sta'],
-    'atc': ['atr com', 'atr com phm psy', 'atr com psy', 'atr com psy sta', 'atr com sta'],
+    'atc': ['atr com', 'atr com phm psy', 'atr com psy', 'atr com psy sta',
+            'atr com sta'],
     'ate': ['act atr', 'act atr evt', 'act atr evt sta', 'act atr sta', 'atr evt',
             'atr evt psy', 'atr evt sta'],
     'atg': ['atr grp'],
@@ -297,8 +324,9 @@ CORELEX_TYPES = {
     'chf': ['chm fod'],
     'chm': ['chm', 'chm sta'],
     'chp': ['chm plt'],
-    'coa': ['act com', 'act com evt', 'act com evt', 'act com evt psy', 'act com pro',
-            'act com psy', 'act com psy sta', 'act com rel', 'act com sta', 'com evt', 'com pro'],
+    'coa': ['act com', 'act com evt', 'act com evt', 'act com evt psy',
+            'act com pro', 'act com psy', 'act com psy sta', 'act com rel',
+            'act com sta', 'com evt', 'com pro'],
     'coh': ['com hum'],
     'col': ['com log'],
     'com': ['com', 'com psy', 'com psy sta', 'com rel', 'com sta'],
@@ -321,14 +349,16 @@ CORELEX_TYPES = {
     'grp': ['grp'],
     'grq': ['grs qud'],
     'grs': ['grp grs', 'grs', 'grs sta'],
-    'gsa': ['act art com grs', 'act art grs', 'act atr grs', 'act grp', 'art grs', 'art grs sub'],
+    'gsa': ['act art com grs', 'act art grs', 'act atr grs', 'act grp',
+            'art grs', 'art grs sub'],
     'gsl': ['grs log'],
     'gsp': ['grs psy', 'grs psy sta'],
     'hue': ['act evt hum sta', 'act hum', 'evt hum', 'hum sta'],
     'hum': ['grp hum', 'grp hum nat', 'grs hum', 'hum'],
     'hup': ['hum psy'],
     'lac': ['act loc', 'act log'],
-    'lap': ['art loc', 'art loc psy', 'art loc sta', 'com loc', 'com loc psy', 'loc psy', 'loc sta'],
+    'lap': ['art loc', 'art loc psy', 'art loc sta', 'com loc', 'com loc psy',
+            'loc psy', 'loc sta'],
     'lfr': ['lfr'],
     'lgg': ['grp log'],
     'lme': ['lme', 'lme qud'],
@@ -355,19 +385,22 @@ CORELEX_TYPES = {
     'pht': ['atr phm'],
     'plf': ['fod plt'],
     'plt': ['fod nat plt', 'nat plt', 'nat plt sub', 'plt'],
-    'poa': ['act com evt pos', 'act evt pos', 'act pos', 'act pos psy', 'act pos psy sta', 'evt pos'],
+    'poa': ['act com evt pos', 'act evt pos', 'act pos', 'act pos psy',
+            'act pos psy sta', 'evt pos'],
     'pom': ['com pos', 'act com pos', 'art com pos', 'atr com pos'],
     'poq': ['pos qud'],
     'pos': ['pos', 'pos pro', 'pos psy', 'pos sta'],
     'prn': ['nat pro'],
     'pro': ['pro'],
-    'prt': ['art fod prt', 'art frm prt', 'art prt', 'atr prt', 'atr prt sub', 'fod prt', 'frm prt',
+    'prt': ['art fod prt', 'art frm prt', 'art prt', 'atr prt', 'atr prt sub',
+            'fod prt', 'frm prt',
             'hum prt', 'nat prt', 'prt', 'prt qui', 'prt sta'],
     'psa': ['act art pos', 'art pos'],
     'psg': ['act grp psy', 'grp psy'],
     'psr': ['pos rel'],
     'psy': ['evt psy', 'evt psy sta', 'psy', 'psy sta'],
-    'pya': ['act evt psy', 'act evt psy sta', 'act psy', 'act psy rel', 'act psy sta'],
+    'pya': ['act evt psy', 'act evt psy sta', 'act psy', 'act psy rel',
+            'act psy sta'],
     'qcc': ['qud sta'],
     'qcs': ['com qud sta'],
     'qde': ['act qud'],
@@ -400,6 +433,26 @@ def create_corelex_types_mapping():
         mapping.setdefault(cltype, []).append(ptype)
     for cltype in sorted(mapping):
         print("    '%s': %s," % (cltype, mapping[cltype]))
+
+
+def get_basic_types(version):
+    if version == '1.5':
+        return BASIC_TYPES_1_5
+    elif version == '3.1':
+        return BASIC_TYPES_3_1
+    else:
+        print("WARNING: no basic types available for version", version)
+        exit()
+
+
+def get_type_relations(version):
+    if version == '1.5':
+        return BASIC_TYPES_ISA_RELATIONS_1_5
+    elif version == '3.1':
+        return BASIC_TYPES_ISA_RELATIONS_3_1
+    else:
+        print("WARNING: no type relations available for version", version)
+        exit()
 
 
 if __name__ == '__main__':
