@@ -6,6 +6,8 @@ Usage:
 
    $ python3 corelex.py --create <version> <category>
    $ python3 corelex.py --sql <version> <category>
+   $ python3 corelex.py --btyperels1 <version> <category>
+   $ python3 corelex.py --btyperels2 <version> <category>
    $ python3 corelex.py --browse <version> <category>
 
    where <version> is 1.5 or 3.1 and <category> is n or v
@@ -44,6 +46,23 @@ we do not create a table for CoreLex types.
 This does not yet work for verbs.
 
 
+==> Creating basic types relations from WordNet
+
+   $ python3 corelex.py --btyperels1 <version> <category>
+   $ python3 corelex.py --btyperels2 <version> <category>
+
+The first one reads the specified WordNet version and creates a file in data/ of
+the form corelex-<version>-<category>s-basic-type-relations1.txt containing the
+relations expressed between basic types.
+
+The second reads the results of the first one and creates another file in data/
+of the form corelex-<version>-<category>s-basic-type-relations2.txt containing
+only the significant relations expressed between basic types, where significant
+is determined using some version of the chi-square test.
+
+This does not yet work for verbs.
+
+
 ==> Browsing CoreLex
 
    $ python3 corelex.py --browse 1.5 n
@@ -57,9 +76,10 @@ import pprint
 import textwrap
 import io
 
-from wordnet import WordNet, NOUN, VERB, expand
+from wordnet import WordNet, NOUN, VERB, POINTER_SYMBOLS, expand
 import cltypes
 from utils import index_file, data_file, flatten, bold
+from statistics import Distribution, ChiSquaredCell
 
 
 def get_basic_types(synsets):
@@ -80,6 +100,8 @@ def print_usage():
     print("\nUsage:\n",
           "   $ python3 corelex.py --create <version> <category>\n",
           "   $ python3 corelex.py --sql <version> <category>\n",
+          "   $ python3 corelex.py --btyperels1 <version> <category>\n",
+          "   $ python3 corelex.py --btyperels2 <version> <category>\n",
           "   $ python3 corelex.py --browse <version> <category>\n")
 
 
@@ -320,7 +342,9 @@ def test_paths_top_top(wn):
 
 
 def create_corelex_from_wordnet(version, category):
+
     """Create CoreLex files from a WordNet version for the category specified."""
+
     if not version in ('1.5', '3.1'):
         exit("ERROR: unsupported wordnet version")
     if not category in ('n', 'v'):
@@ -340,11 +364,12 @@ def create_corelex_from_wordnet(version, category):
         cl.pp("data/corelex-%s-verbs.txt" % version)
 
 
-def scratch(version, category):
+def create_basic_type_relations1(version, category):
 
-    """For whatever I am experimenting with."""
-
-    # Collecting all relations and then turn them into relations between basic types.
+    """Collect all relations and then turn them into relations between basic
+    types. Store the relations not as individual relations but as a relation
+    signature between basic types, where the signature specifies how many
+    relations of a given type occur between the two types."""
 
     wn = WordNet(version, category)
     wn.add_nominal_basic_types()
@@ -362,11 +387,101 @@ def scratch(version, category):
             bt_relation_index[pair] = {}
         bt_relation_index[pair][rel] = bt_relation_index[pair].get(rel, 0) + 1
 
-    fh = open('tmp-basic-type-relations.txt', 'w')
+    outfile = 'data/corelex-%s-%ss-basic-type-relations1.txt' \
+              % (version, expand(category))
+    fh = open(outfile, 'w')
     for pair in sorted(bt_relation_index.keys()):
         if pair[0] != pair[1]:
-            d = ' '.join(["(%s %s)" % (k, v) for k,v in bt_relation_index[pair].items()])
-            fh.write("%s-%s  %s\n" % (pair[0], pair[1], d))
+            fh.write("%s-%s" % (pair[0], pair[1]))
+            for k,v in bt_relation_index[pair].items():
+                fh.write("\t%s %s" % (k, v))
+            fh.write("\n")
+
+
+def read_basic_type_relations(version, category):
+    """Read the relations between basic types from file and return the relations as
+    a dictionary. Keys are pairs of basic relations, values are dictionaries of
+    pointer symbols and their counts."""
+    rels = {}
+    fname = "data/corelex-%s-%ss-basic-type-relations1.txt" \
+            % (version, expand(category))
+    for line in open(fname):
+        fields = line.strip().split("\t")
+        types = fields.pop(0)
+        rel = tuple(types.split('-'))
+        pointer_dictionary = {}
+        for field in fields:
+            pointer, count = field.split()
+            pointer_dictionary[pointer] = int(count)
+        rels[rel] = pointer_dictionary
+    return rels
+
+
+def get_overall_distribution(btrels):
+    """Return a distribution of all relations in all basic type pairs. This will be
+    used to compare the distributions of individual pairs to."""
+    d = Distribution('ALL')
+    for pointers in btrels.values():
+        for pointer, count in pointers.items():
+            d.add(pointer, count)
+    d.finish()
+    return d
+
+
+def collect_significant_relations(overall_distribution, btrels):
+    """Return a dictionary indexed on type pairs with for each pair the relations
+    that occur significantly more often than in WordNet overall."""
+    relations = {}
+    for pair, pointers in btrels.items():
+        di = Distribution('-'.join(pair))
+        for pointer, count in pointers.items():
+            di.add(pointer, count)
+        di.finish()
+        di.chi_squared(overall_distribution)
+        if di.observations < 20 or di.X2_statistic < 100:
+            continue
+        cells = []
+        for cell in di.X2_table.values():
+            if cell.observed > cell.expected and cell.component() > 200:
+                cells.append(cell)
+        if cells:
+            relations[pair] = cells
+    return relations
+
+
+def write_significant_relations(version, category, rels):
+    fname = "data/corelex-%s-%ss-basic-type-relations2.txt" % (version, expand(category))
+    with open(fname, 'w') as fh:
+        basic_types = cltypes.get_basic_types(version)
+        for pair in sorted(rels):
+            cells = rels[pair]
+            bt1, bt2 = pair
+            fh.write("== %s-%s\n" % (bt1, bt2))
+            fh.write('\n')
+            for offset, synset in basic_types.get(bt1):
+                fh.write('   %s\n' % synset)
+            fh.write('\n')
+            for offset, synset in basic_types.get(bt2):
+                fh.write('   %s\n' % synset)
+            fh.write('\n')
+            for cell in cells:
+                fh.write("   %2s  --  %s\n" % (cell.category, POINTER_SYMBOLS.get(cell.category)))
+            fh.write('\n')
+
+
+def create_basic_type_relations2(version, category):
+    btrels = read_basic_type_relations(version, category)
+    d = get_overall_distribution(btrels)
+    d.pp()
+    rels = collect_significant_relations(d, btrels)
+    write_significant_relations(version, category, rels)
+
+            
+def scratch(version, category):
+
+    """For whatever I am experimenting with."""
+
+    create_basic_type_relations2(version, category)
 
 
 
@@ -386,6 +501,18 @@ if __name__ == '__main__':
         if category == 'n':
             cl = CoreLex(version=version, category=NOUN)
             cl.write_tables()
+        else:
+            exit("This does not work for verbs yet")
+
+    elif sys.argv[1] == '--btyperels1':
+        if category == 'n':
+            create_basic_type_relations1(version, category)
+        else:
+            exit("This does not work for verbs yet")
+
+    elif sys.argv[1] == '--btyperels2':
+        if category == 'n':
+            create_basic_type_relations2(version, category)
         else:
             exit("This does not work for verbs yet")
 

@@ -48,6 +48,42 @@ WORDNET_DIR = '/DATA/resources/lexicons/wordnet/WordNet-%s/'
 NOUN = 'noun'
 VERB = 'verb'
 
+
+POINTER_SYMBOLS = {
+
+    '!': 'Antonym',
+    '@': 'Hypernym',
+    '@i': 'Instance Hypernym',
+    '~': 'Hyponym',
+    '~i': 'Instance Hyponym',
+    '#m': 'Member holonym',
+    '#s': 'Substance holonym',
+    '#p': 'Part holonym',
+    '%m': 'Member meronym',
+    '%s': 'Substance meronym',
+    '%p': 'Part meronym',
+    '=': 'Attribute',
+    '+': 'Derivationally related form',
+    ';c': 'Domain of synset - TOPIC',
+    ';r': 'Domain of synset - REGION',
+    ';u': 'Domain of synset - USAGE',
+    '-c': 'Member of this domain - TOPIC',
+    '-r': 'Member of this domain - REGION',
+    '-u': 'Member of this domain - USAGE',
+
+    '*': 'Entailment',
+    '>': 'Cause',
+    '^': 'Also see',
+    '$': 'Verb Group',
+    '+': 'Derivationally related form',
+
+    '&': 'Similar to',
+    '<': 'Participle of verb',
+    '\\': 'Pertainym (pertains to noun)',
+    '=': 'Attribute'
+}
+
+
 if sys.version_info.major < 3:
     raise Exception("Python 3 is required.")
 
@@ -219,9 +255,12 @@ class WordNet(object):
     def pp_noun(self, w):
         print("\n", w)
         word = self.get_noun(w)
-        for synset_id in word.synsets:
-            synset = self.get_noun_synset(synset_id)
-            print('  ', synset.formatted())
+        if word is None:
+            print('   does not occur in WordNet')
+        else:
+            for synset_id in word.synsets:
+                synset = self.get_noun_synset(synset_id)
+                print('  ', synset.formatted())
 
     def pp_toplevel(self, cat):
         toptypes = self.toptypes(cat)
@@ -275,7 +314,7 @@ class WordNet(object):
         relations = self.get_all_relations(NOUN)
         bt_relations = []
         for source_synset, pointer in relations:
-            if pointer.symbol in ('~', '@', '@i'):
+            if pointer.symbol in ('~', '~i', '@', '@i'):
                 continue
             target_synset = self.get_noun_synset(pointer.target_synset)
             # some pointers are not to nouns, skip them
