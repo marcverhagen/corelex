@@ -51,14 +51,24 @@ This does not yet work for verbs.
    $ python3 corelex.py --btyperels1 <version> <category>
    $ python3 corelex.py --btyperels2 <version> <category>
 
-The first one reads the specified WordNet version and creates a file in data/ of
-the form corelex-<version>-<category>s-basic-type-relations1.txt containing the
-relations expressed between basic types.
+The first invocation reads the specified WordNet version and creates two files:
 
-The second reads the results of the first one and creates another file in data/
-of the form corelex-<version>-<category>s-basic-type-relations2.txt containing
-only the significant relations expressed between basic types, where significant
-is determined using some version of the chi-square test.
+   data/corelex-<version>-<category>s-basic-type-relations.txt
+   data/corelex-<version>-<category>s-relations.txt
+
+The first one contains the relations expressed between basic types and the
+second contains all relations, but with both the basic type and synset
+specifications for source and target.
+
+The second invocation reads the results of the first invocation and creates
+another file and a directory:
+
+   corelex-<version>-<category>s-basic-type-relations2.txt
+   directory data/corelex-<version>-<category>s-basic-type-relations/
+
+The file contains only the significant relations expressed between basic types,
+where significant is determined using some version of the chi-square test. The
+directory contains html pages with a more comprehensive view of the relations.
 
 This does not yet work for verbs.
 
@@ -71,6 +81,7 @@ This does not yet work for verbs.
 
 """
 
+import os
 import sys
 import pprint
 import textwrap
@@ -369,113 +380,219 @@ def create_basic_type_relations1(version, category):
     """Collect all relations and then turn them into relations between basic
     types. Store the relations not as individual relations but as a relation
     signature between basic types, where the signature specifies how many
-    relations of a given type occur between the two types."""
+    relations of a given type occur between the two types.
+    synsets. Files created:
 
+       data/corelex-VERSION-CATEGORY-relations.txt
+       data/corelex-VERSION-CATEGORY-basic-type-relations.txt
+
+    The first has all relations as 5-tuples with basic types, pointers and the
+    members of the source and target synsets. The second has the relation
+    signatures between basic type pairs.
+
+    """
+
+    # collecting relations and relation signatures
     wn = WordNet(version, category)
     wn.add_nominal_basic_types()
     wn.pp_nouns(['abstraction', 'door', 'woman', 'chicken', 'aachen'])
-
     bt_relations = wn.get_all_basic_type_relations(NOUN)
-    print(len(bt_relations))
-
     bt_relation_index = {}
     for bt_relation in bt_relations:
         pair = (bt_relation[0], bt_relation[2])
         rel = bt_relation[1]
         if pair not in bt_relation_index:
-            #print(rel, pair)
             bt_relation_index[pair] = {}
         bt_relation_index[pair][rel] = bt_relation_index[pair].get(rel, 0) + 1
 
-    outfile = 'data/corelex-%s-%ss-basic-type-relations1.txt' \
-              % (version, expand(category))
-    fh = open(outfile, 'w')
-    for pair in sorted(bt_relation_index.keys()):
-        if pair[0] != pair[1]:
-            fh.write("%s-%s" % (pair[0], pair[1]))
-            for k,v in bt_relation_index[pair].items():
-                fh.write("\t%s %s" % (k, v))
-            fh.write("\n")
+    # writing results
+    c = expand(category)
+    relations = 'data/corelex-%s-%ss-relations.txt' % (version, c)
+    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (version, c)
+    with open(relations, 'w') as fh:
+        for bt_relation in bt_relations:
+            source = bt_relation[3]
+            target = bt_relation[4]
+            fh.write("%s\t%s\t%s\n" % ("\t".join(bt_relation[:3]),
+                                       source.words_as_string(),
+                                       target.words_as_string()))
+    with open(basicrels, 'w') as fh:
+        for pair in sorted(bt_relation_index.keys()):
+            if pair[0] != pair[1]:
+                fh.write("%s-%s" % (pair[0], pair[1]))
+                for k,v in bt_relation_index[pair].items():
+                    fh.write("\t%s %s" % (k, v))
+                fh.write("\n")
 
 
-def read_basic_type_relations(version, category):
-    """Read the relations between basic types from file and return the relations as
-    a dictionary. Keys are pairs of basic relations, values are dictionaries of
-    pointer symbols and their counts."""
-    rels = {}
-    fname = "data/corelex-%s-%ss-basic-type-relations1.txt" \
-            % (version, expand(category))
-    for line in open(fname):
-        fields = line.strip().split("\t")
-        types = fields.pop(0)
-        rel = tuple(types.split('-'))
-        pointer_dictionary = {}
-        for field in fields:
-            pointer, count = field.split()
-            pointer_dictionary[pointer] = int(count)
-        rels[rel] = pointer_dictionary
-    return rels
+
+class BasicTypeRelations(object):
+
+    def __init__(self, version, category):
+        self.version = version
+        self.category = category
+        self.btrels1 = {}                  # basic type relations
+        self.btrels2 = {}                  # significant basic type relations
+        self.allrels = {}                  # all relations
+        self._read_basic_type_relations()  # fill in self.btrels1
+        self._read_relations()             # fill in self.allrels
+
+    def _read_basic_type_relations(self):
+        """Read the relations between basic types from file and return the relations as
+        a dictionary. Keys are pairs of basic relations, values are dictionaries of
+        pointer symbols and their counts."""
+        fname = "data/corelex-%s-%ss-basic-type-relations.txt" \
+                % (self.version, expand(self.category))
+        for line in open(fname):
+            fields = line.strip().split("\t")
+            types = fields.pop(0)
+            rel = tuple(types.split('-'))
+            pointer_dictionary = {}
+            for field in fields:
+                pointer, count = field.split()
+                pointer_dictionary[pointer] = int(count)
+            self.btrels1[rel] = pointer_dictionary
+
+    def _read_relations(self):
+        """Read all the relations from the data/corelex-VERSION-CATEGORY-relations.txt
+        file and return them as a dictionary indexed on the basic type pair."""
+        fname = "data/corelex-%s-%ss-relations.txt" % (self.version, expand(self.category))
+        with open(fname) as fh:
+            for line in fh:
+                fields = line.strip().split("\t")
+                basic_rel = "%s-%s" % (fields[0], fields[2])
+                self.allrels.setdefault(basic_rel, []).append(fields)
+
+    def calculate_distribution(self):
+        """Return a distribution of all relations in all basic type pairs. This will be
+        used to compare the distributions of individual pairs to."""
+        self.distribution = Distribution('ALL')
+        for pointers in self.btrels1.values():
+            for pointer, count in pointers.items():
+                self.distribution.add(pointer, count)
+        self.distribution.finish()
+
+    def collect_significant_relations(self):
+        """Return a dictionary indexed on type pairs with for each pair the relations
+        that occur significantly more often than in WordNet overall."""
+        for pair, pointers in self.btrels1.items():
+            di = Distribution('-'.join(pair))
+            for pointer, count in pointers.items():
+                di.add(pointer, count)
+            di.finish()
+            di.chi_squared(self.distribution)
+            if di.observations < 20 or di.X2_statistic < 100:
+                continue
+            cells = []
+            for cell in di.X2_table.values():
+                if cell.observed > cell.expected and cell.component() > 200:
+                    cells.append(cell)
+            if cells:
+                self.btrels2[pair] = cells
 
 
-def get_overall_distribution(btrels):
-    """Return a distribution of all relations in all basic type pairs. This will be
-    used to compare the distributions of individual pairs to."""
-    d = Distribution('ALL')
-    for pointers in btrels.values():
-        for pointer, count in pointers.items():
-            d.add(pointer, count)
-    d.finish()
-    return d
 
+class RelationsWriter(object):
 
-def collect_significant_relations(overall_distribution, btrels):
-    """Return a dictionary indexed on type pairs with for each pair the relations
-    that occur significantly more often than in WordNet overall."""
-    relations = {}
-    for pair, pointers in btrels.items():
-        di = Distribution('-'.join(pair))
-        for pointer, count in pointers.items():
-            di.add(pointer, count)
-        di.finish()
-        di.chi_squared(overall_distribution)
-        if di.observations < 20 or di.X2_statistic < 100:
-            continue
-        cells = []
-        for cell in di.X2_table.values():
-            if cell.observed > cell.expected and cell.component() > 200:
-                cells.append(cell)
-        if cells:
-            relations[pair] = cells
-    return relations
+    def __init__(self, basic_type_relations):
+        self.btr = basic_type_relations
+        self.html_dir = "data/corelex-%s-%ss-basic-type-relations" \
+                        % (self.btr.version, expand(self.btr.category))
+        self.rels_dir = os.path.join(self.html_dir, 'rels')
+        self.index_file = os.path.join(self.html_dir, "index.html")
+        self.basic_types = cltypes.get_basic_types(self.btr.version)
 
+    def write(self):
+        self._ensure_directories()
+        with open(self.index_file, 'w') as fh:
+            fh.write("<html>\n");
+            self._write_head(fh)
+            fh.write("<body>\n");
+            fh.write("<table cellpadding=5 cellspacing=0 border=1>\n");
+            fh.write("<tr align=center>\n");
+            fh.write("  <td>&nbsp;</td>\n");
+            categories = self.btr.distribution.get_categories()
+            for cat in categories:
+                fh.write("  <td width=30>%s</td>\n" % cat);
+            fh.write("</tr>\n");
+            for pair in sorted(self.btr.btrels2):
+                cells = self.btr.btrels2[pair]
+                cell_categories = set([cell.category for cell in cells])
+                bt1, bt2 = pair
+                fh.write("<tr align=center>\n")
+                name = "%s-%s" % (bt1, bt2)
+                fh.write("  <td align=left><a href=rels/%s.html>%s</a></td>\n" % (name, name))
+                #self._write_pair_description(fh, bt1, bt2)
+                #fh.write("  </td>\n")
+                for cat in categories:
+                    val = "&check;" if cat in cell_categories else "&nbsp;"
+                    fh.write("  <td>%s</td>\n" % val);
+                fh.write("</tr>\n")
+                self._write_relation(bt1, bt2, name, cells)
+            fh.write("</table>\n");
 
-def write_significant_relations(version, category, rels):
-    fname = "data/corelex-%s-%ss-basic-type-relations2.txt" % (version, expand(category))
-    with open(fname, 'w') as fh:
-        basic_types = cltypes.get_basic_types(version)
-        for pair in sorted(rels):
-            cells = rels[pair]
-            bt1, bt2 = pair
-            fh.write("== %s-%s\n" % (bt1, bt2))
-            fh.write('\n')
-            for offset, synset in basic_types.get(bt1):
-                fh.write('   %s\n' % synset)
-            fh.write('\n')
-            for offset, synset in basic_types.get(bt2):
-                fh.write('   %s\n' % synset)
-            fh.write('\n')
+    def _write_head(self, fh):
+        fh.write("<head>\n")
+        fh.write("<style>\n")
+        fh.write("a:link { text-decoration: none; }\n")
+        fh.write("a:visited { text-decoration: none; }\n")
+        fh.write("a:hover { text-decoration: underline; }\n")
+        fh.write("a:active { text-decoration: underline; }\n")
+        fh.write("</style>\n</head>\n")
+
+    def _ensure_directories(self):
+        if not os.path.exists(self.html_dir):
+            os.makedirs(self.html_dir)
+            os.makedirs(self.rels_dir)
+
+    def _write_relation(self, bt1, bt2, name, cells):
+        fname = os.path.join(self.rels_dir, name + '.html')
+        with open(fname, 'w') as fh:
+            fh.write("<html>\n")
+            self._write_head(fh)
+            fh.write("<body>\n")
+            fh.write("<h2>%s-%s</h2>\n" % (bt1, bt2))
+            self._write_pair_description(fh, bt1, bt2)
+            fh.write('<p>Relations:')
             for cell in cells:
-                fh.write("   %2s  --  %s\n" % (cell.category, POINTER_SYMBOLS.get(cell.category)))
-            fh.write('\n')
+                fh.write(" [<a href=#%s>%s</a>]" % (cell.category, POINTER_SYMBOLS.get(cell.category)))
+            fh.write('</p>')
+            for cell in cells:
+                fh.write("<a name=%s></a>\n" % cell.category)
+                fh.write("<p>%s  (%s)</p>\n" % (POINTER_SYMBOLS.get(cell.category), cell.category))
+                fh.write("<blockquote>\n")
+                fh.write("<table cellpadding=5 cellspacing=0 border=1>\n")
+                rels = self.btr.allrels[name]
+                for rel in rels:
+                    if cell.category == rel[1]:
+                        fh.write("<tr><td>%s</td><td>%s</td></tr>\n" % (simplify(rel[3]), simplify(rel[4])))
+                fh.write("</table>\n")
+                fh.write("</blockquote>\n")
+
+    def _write_pair_description(self, fh, bt1, bt2):
+        fh.write('<p>{')
+        for offset, synset in self.basic_types.get(bt1):
+            fh.write(' %s' % synset)
+        fh.write(' } &bullet; {')
+        for offset, synset in self.basic_types.get(bt2):
+            fh.write(' %s' % synset)
+        fh.write('}</p>\n')
+
+
+def simplify(synset_name):
+    fields = synset_name.split()
+    fields = [f.split('.')[0] for f in fields] 
+    return '&nbsp;'.join(fields)
 
 
 def create_basic_type_relations2(version, category):
-    btrels = read_basic_type_relations(version, category)
-    d = get_overall_distribution(btrels)
-    d.pp()
-    rels = collect_significant_relations(d, btrels)
-    write_significant_relations(version, category, rels)
-
+    btr = BasicTypeRelations(version, category)
+    btr.calculate_distribution()
+    btr.collect_significant_relations()
+    #write_significant_relations(version, category, btr.distribution, btr.btrels2, btr.allrels)
+    rw = RelationsWriter(btr)
+    rw.write()
+    
             
 def scratch(version, category):
 

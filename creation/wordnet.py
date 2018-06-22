@@ -305,12 +305,13 @@ class WordNet(object):
         return self._all_relations
 
     def get_all_basic_type_relations(self, cat):
-        """Return a list of triples of the form <basic_type_name, pointer_symbol,
-        basic_type_name>. There is a at least one triple for each relation
-        amongst nominal synsets with the synsets replaced by the name of the
-        basic types. If one of the synsets has two or more basic types, than a
-        basic type relation will be cretaed for each of them. In this case, all
-        basic types are used, not just the filtered ones."""
+        """Return a list of 5-tuples of the form <basic_type_name, pointer_symbol,
+        basic_type_name, source_synset, target_synset>. There is a at least one
+        triple for each relation amongst nominal synsets with the synsets
+        replaced by the name of the basic types. If one of the synsets has two
+        or more basic types, than a basic type relation will be cretaed for each
+        of them. In this case, all basic types are used, not just the filtered
+        ones."""
         relations = self.get_all_relations(NOUN)
         bt_relations = []
         for source_synset, pointer in relations:
@@ -324,7 +325,7 @@ class WordNet(object):
             # we want to get the relations at all levels
             for bts in source_synset.basic_types:
                 for btt in target_synset.basic_types:
-                    bt_relations.append([bts, pointer.symbol, btt])
+                    bt_relations.append([bts, pointer.symbol, btt, source_synset, target_synset])
         return bt_relations
 
     def display_basic_type_isa_relations(self):
@@ -400,13 +401,16 @@ class Synset(object):
         self.validate()
 
     def __str__(self):
-        words = ' '.join(["%s.%s.%s" % (word_lex[0], self.lex_filenum, word_lex[1])
-                          for word_lex in self.words])
+        words = self.words_as_string()
         basic_type = ' %s' % self.basic_type_name if self.is_basic_type else ''
         return "<Synset %s %s %s%s>" % (self.id, self.ss_type, words, basic_type)
 
     def formatted(self):
         return self.as_formatted_string()
+
+    def words_as_string(self):
+        return ' '.join(["%s.%s.%s" % (word_lex[0], self.lex_filenum, word_lex[1])
+                         for word_lex in self.words])
 
     def as_formatted_string(self):
         words = ' '.join(["%s.%s.%s" % (blue(word_lex[0]), self.lex_filenum, word_lex[1])
@@ -479,7 +483,7 @@ class Synset(object):
         return answer
 
     def has_hypernyms(self):
-         return self.pointers.get('@') is not None \
+        return self.pointers.get('@') is not None \
             or self.pointers.get('@i') is not None
     
     def has_hyponyms(self):
@@ -487,15 +491,35 @@ class Synset(object):
             or self.pointers.get('~i') is not None
 
     def hypernyms(self):
-        pointers = self.pointers.get('@', [])
-        pointers.extend(self.pointers.get('@i', []))
-        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
+        """Returns a list of hypernyms and instance hypernyms."""
+        return self.get_pointers(['@', '@i'])
 
     def hyponyms(self):
-        pointers = self.pointers.get('~', [])
-        pointers.extend(self.pointers.get('~i', []))
-        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
+        """Returns a list of hyponyms and instance hyponyms."""
+        return self.get_pointers(['~', '~i'])
 
+    def holonyms(self):
+        """Returns a list of member, substance and part holonyms."""
+        return self.get_pointers(['#m', '#s', '#p'])
+
+    def meronyms(self):
+        """Returns a list of member, substance and part meronyms."""
+        return self.get_pointers(['%m', '%s', '%p'])
+
+    def antonyms(self):
+        """Returns a list of antonyms."""
+        return self.get_pointers(['!'])
+
+    def attributes(self):
+        """Returns a list of attributes."""
+        return self.get_pointers(['='])
+
+    def get_pointers(self, pointer_list):
+        pointers = []
+        for symbol in pointer_list:
+            pointers.extend(self.pointers.get(symbol, []))
+        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
+            
     def paths_to_top(self):
         hypernyms = self.hypernyms()
         if not hypernyms:
@@ -534,7 +558,12 @@ class Synset(object):
             self.pp_paths_to_top('  ')
         self.pp_hypernyms()
         self.pp_hyponyms()
-
+        self.pp_holonyms()
+        self.pp_meronyms()
+        self.pp_antonyms()
+        # not doing these because they can go to different categories
+        # self.pp_attributes()
+        
     def pp_short(self):
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         print("  %s" % self)
@@ -557,17 +586,56 @@ class Synset(object):
         print()
 
     def pp_hypernyms(self):
-        if self.has_hypernyms():
+        hypernyms = self.hypernyms()
+        if hypernyms:
             print('\n  %s' % blue('hypernyms'))
-            for synset in self.hypernyms():
+            for synset in hypernyms:
                 print('    [%d] %s' % (self.count, synset.as_formatted_string()))
                 self.mappings[self.count] = synset
                 self.count +=1
 
     def pp_hyponyms(self):
-        if self.has_hyponyms():
+        hyponyms = self.hyponyms()
+        if hyponyms:
             print('\n  %s' % blue('hyponyms'))
-            for synset in self.hyponyms():
+            for synset in hyponyms:
+                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
+                self.mappings[self.count] = synset
+                self.count +=1
+
+    def pp_holonyms(self):
+        holonyms = self.holonyms()
+        if holonyms:
+            print('\n  %s' % blue('holonyms'))
+            for synset in holonyms:
+                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
+                self.mappings[self.count] = synset
+                self.count +=1
+
+    def pp_meronyms(self):
+        meronyms = self.meronyms()
+        if meronyms:
+            print('\n  %s' % blue('meronyms'))
+            for synset in meronyms:
+                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
+                self.mappings[self.count] = synset
+                self.count +=1
+
+    def pp_antonyms(self):
+        antonyms = self.antonyms()
+        if antonyms:
+            print('\n  %s' % blue('antonyms'))
+            for synset in antonyms:
+                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
+                self.mappings[self.count] = synset
+                self.count +=1
+
+    def pp_attributes(self):
+        attributes = self.attributes()
+        print(attributes)
+        if attributes:
+            print('\n  %s' % blue('attributes'))
+            for synset in attributes:
                 print('    [%d] %s' % (self.count, synset.as_formatted_string()))
                 self.mappings[self.count] = synset
                 self.count +=1

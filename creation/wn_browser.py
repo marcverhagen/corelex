@@ -151,4 +151,6 @@ if __name__ == '__main__':
         exit("ERROR: unsupported wordnet version")
 
     wn = WordNet(wn_version, category)
+    if expand(category) == NOUN:
+        wn.add_nominal_basic_types()
     UserLoop(wn, category)
