@@ -604,18 +604,24 @@ class RelationsWriter(object):
             self._write_pair_description(fh, bt1, bt2)
             fh.write('<p>Relations:')
             for cell in cells:
-                fh.write(" [<a href=#%s>%s</a>]" % (cell.category, POINTER_SYMBOLS.get(cell.category)))
+                fh.write(" [<a href=#%s>%s</a>]"
+                         % (cell.category, POINTER_SYMBOLS.get(cell.category)))
             fh.write('</p>')
             for cell in cells:
                 fh.write("<a name=%s></a>\n" % cell.category)
-                fh.write("<p>%s  (%s)</p>\n" % (POINTER_SYMBOLS.get(cell.category), cell.category))
+                fh.write("<p>&bullet; %s  (%s)</p>\n"
+                         % (POINTER_SYMBOLS.get(cell.category), cell.category))
                 rels = self.btr.allrels[name]
                 grouped_rels = {}
                 for rel in rels:
-                    source = rel[3]
-                    target = rel[4]
-                    grouped_rels.setdefault(source.id, [source, []])
-                    grouped_rels[source.id][1].append(target)
+                    # If we skip this test we get a problem when, for example,
+                    # we have <ss1 #s ss2> and <ss2 %s ss1>. In that case the
+                    # results will also show <ss1 %s ss2> and <ss2 #s ss1>.
+                    if rel[1] == cell.category:
+                        source = rel[3]
+                        target = rel[4]
+                        grouped_rels.setdefault(source.id, [source, []])
+                        grouped_rels[source.id][1].append(target)
                 fh.write("<blockquote>\n<dl>\n")
                 for synset_id in grouped_rels:
                     source, targets = grouped_rels[synset_id]
