@@ -4,29 +4,64 @@ Script to create CoreLex from WordNet.
 
 Usage:
 
-   $ python3 corelex.py --create <version> <category>
-   $ python3 corelex.py --sql <version> <category>
+   $ python3 corelex.py --create-lemma-to-cltype-files <version>
    $ python3 corelex.py --btyperels1 <version> <category>
    $ python3 corelex.py --btyperels2 <version> <category>
    $ python3 corelex.py --browse <version> <category>
+   $ python3 corelex.py --sql <version> <category>
 
    where <version> is 1.5 or 3.1 and <category> is n or v
 
 
 ==> Creating CoreLex files from WordNet
 
-For example, to create CoreLex nouns from WordNet 1.5:
+For example, to create CoreLex types for lemmas in WordNet 1.5:
 
-   $ python3 corelex.py --create 1.5 n
+   $ python3 corelex.py --create-lemma-to-cltype-files 1.5
 
-This loads the nouns from WordNet 1.5 using the wordnet.py module and then
-creates two files:
+This loads WordNet 1.5 using the wordnet.py module and then creates four files:
 
    data/corelex-1.5-nouns.tab
    data/corelex-1.5-nouns.txt
+   data/corelex-1.5-verbs.tab
+   data/corelex-1.5-verbs.txt
 
-The first of these can later be used to load CoreLex, the second contains the
-same data but it is easier on the eye.
+The tab files can later be used to load CoreLex, the txt files contain the same
+data but are easier on the eye.
+
+
+==> Creating basic types relations from WordNet
+
+   $ python3 corelex.py --btyperels1 <version> <category>
+   $ python3 corelex.py --btyperels2 <version> <category>
+
+The first invocation reads the specified WordNet version and creates two files:
+
+   data/corelex-<version>-<category>s-basic-type-relations.txt
+   data/corelex-<version>-<category>s-relations.txt
+
+The first one contains counts of the relations expressed between basic types and
+the second contains all relations with both the basic types and the identifiers
+for the source and target synsets.
+
+The second invocation reads the results of the first invocation and creates a
+directory with html files:
+
+   directory data/corelex-<version>-<category>s-basic-type-relations/
+
+The index file in the directory contains a table with only the significant
+relations expressed between basic types, where significant is determined using
+some version of the chi-square test. The rest of the directory contains html
+pages with more comprehensive views of the relations.
+
+This does not yet work for verbs.
+
+
+==> Browsing CoreLex
+
+   $ python3 corelex.py --browse 1.5 n
+
+This does not yet work for verbs.
 
 
 ==> Exporting CoreLex as SQL files
@@ -45,40 +80,6 @@ we do not create a table for CoreLex types.
 
 This does not yet work for verbs.
 
-
-==> Creating basic types relations from WordNet
-
-   $ python3 corelex.py --btyperels1 <version> <category>
-   $ python3 corelex.py --btyperels2 <version> <category>
-
-The first invocation reads the specified WordNet version and creates two files:
-
-   data/corelex-<version>-<category>s-basic-type-relations.txt
-   data/corelex-<version>-<category>s-relations.txt
-
-The first one contains the relations expressed between basic types and the
-second contains all relations, but with both the basic type and synset
-specifications for source and target.
-
-The second invocation reads the results of the first invocation and creates
-another file and a directory:
-
-   corelex-<version>-<category>s-basic-type-relations2.txt
-   directory data/corelex-<version>-<category>s-basic-type-relations/
-
-The file contains only the significant relations expressed between basic types,
-where significant is determined using some version of the chi-square test. The
-directory contains html pages with a more comprehensive view of the relations.
-
-This does not yet work for verbs.
-
-
-==> Browsing CoreLex
-
-   $ python3 corelex.py --browse 1.5 n
-
-This does not yet work for verbs.
-
 """
 
 import os
@@ -92,6 +93,78 @@ import cltypes
 from utils import index_file, data_file, flatten, bold
 from statistics import Distribution, ChiSquaredCell
 
+
+### Top-level methods that are executed driven by user flags
+
+def create_lemma_to_cltype_files(wordnet_version):
+    """Create CoreLex files from the given WordNet version."""
+    wn = WordNet(wordnet_version)
+    wn.add_basic_types()
+    CoreLexTypeGenerator(wn, category=NOUN)
+    CoreLexTypeGenerator(wn, category=VERB)
+
+
+def create_basic_type_relations1(version, category):
+
+    """Collect all relations and then turn them into relations between basic
+    types. Store the relations not as individual relations but as a relation
+    signature between basic types, where the signature specifies how many
+    relations of a given type occur between the two synsets. Files created:
+
+       data/corelex-VERSION-CATEGORY-relations.txt
+       data/corelex-VERSION-CATEGORY-basic-type-relations.txt
+
+    The first has all relations as 5-tuples with basic types, pointers and the
+    identifiers of the source and target synsets. The second is a summary file
+    that has the relation signatures between basic type pairs.
+
+    """
+
+    # collecting relations and relation signatures
+    wn = WordNet(version)
+    wn.add_basic_types()
+    bt_relations = wn.get_all_basic_type_relations(NOUN)
+    bt_relation_index = _create_basic_type_relations_summary(bt_relations)
+
+    # writing results
+    c = expand(category)
+    relations = 'data/corelex-%s-%ss-relations.txt' % (version, c)
+    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (version, c)
+    with open(relations, 'w') as fh:
+        for bt_relation in bt_relations:
+            source = bt_relation[3]
+            target = bt_relation[4]
+            fh.write("%s\t%s\t%s\n"
+                     % ("\t".join(bt_relation[:3]), source.id, target.id))
+
+    with open(basicrels, 'w') as fh:
+        for pair in sorted(bt_relation_index.keys()):
+            if pair[0] != pair[1]:
+                fh.write("%s-%s" % (pair[0], pair[1]))
+                for k,v in bt_relation_index[pair].items():
+                    fh.write("\t%s %s" % (k, v))
+                fh.write("\n")
+
+
+def create_basic_type_relations2(version, category):
+    wn = WordNet(version)
+    wn.add_basic_types()
+    btr = BasicTypeRelations(wn, category)
+    btr.calculate_distribution()
+    btr.collect_significant_relations()
+    rw = RelationsWriter(btr)
+    rw.write()
+    
+
+def scratch(version, category):
+
+    """For whatever I am experimenting with."""
+
+    wn = WordNet(version, category)
+    wn.pp_nouns(['abstraction', 'door', 'woman', 'chicken', 'aachen'])
+
+
+### Utilities
 
 def get_basic_types(synsets):
     basic_types = set()
@@ -109,70 +182,170 @@ def filter_basic_types(set_of_basic_types, type_relations):
 
 def print_usage():
     print("\nUsage:\n",
-          "   $ python3 corelex.py --create <version> <category>\n",
-          "   $ python3 corelex.py --sql <version> <category>\n",
+          "   $ python3 corelex.py --create-lemma-to-cltype-files <version>\n",
           "   $ python3 corelex.py --btyperels1 <version> <category>\n",
           "   $ python3 corelex.py --btyperels2 <version> <category>\n",
-          "   $ python3 corelex.py --browse <version> <category>\n")
+          "   $ python3 corelex.py --browse <version> <category>\n",
+          "   $ python3 corelex.py --sql <version> <category>\n")
 
 
-class CoreLex(object):
+def test_paths_top_top(wn):
+    act = wn.get_synset('00016649')
+    compound = wn.get_synset('08907331')
+    cat = wn.get_synset('05987089')
+    woman = cat.hypernyms()[1]
+    for ss in (act, compound, cat, woman):
+        print()
+        ss.pp_paths_to_top()
 
-    def __init__(self, version='1.5', category=NOUN, wordnet=None):
-        self.category = expand(category)
-        self.version = version
-        self.word_index = {}
-        self.class_index = {}
-        self.corelex_type_to_class = {}
-        self.class_to_corelex_type = {}
-        self._load_corelex_types()
-        if wordnet is not None:
-            self._create_from_wordnet(wordnet)
-        else:
-            self._load_from_file()
 
-    def _create_from_wordnet(self, wordnet):
+def _create_basic_type_relations_summary(bt_relations):
+    bt_relation_index = {}
+    for bt_relation in bt_relations:
+        pair = (bt_relation[0], bt_relation[2])
+        rel = bt_relation[1]
+        if pair not in bt_relation_index:
+            bt_relation_index[pair] = {}
+        bt_relation_index[pair][rel] = bt_relation_index[pair].get(rel, 0) + 1
+    return bt_relation_index
+
+
+class CoreLexTypeGenerator(object):
+
+    """This class is used to generated the mappings from lemmas to polysemous types
+    and corelex types. These mappings can then later be loaded into an instance of
+    the CoreLex class. It creates the following files:
+
+       data/corelex-VERSION-nouns.tab
+       data/corelex-VERSION-nouns.txt
+       data/corelex-VERSION-verbs.tab
+       data/corelex-VERSION-verbs.txt
+
+    The tab files are read into CoreLex and the txt files contain the same data
+    but more pleasant to the eye.
+
+    """
+
+    def __init__(self, wordnet, category):
         self.wordnet = wordnet
-        self.wn_lemma_idx = wordnet.lemma_index()
-        self.wn_synset_idx = wordnet.synset_index()
+        self.category = expand(category)
+        self.version = wordnet.version
+        self.lemma_index = {}
+        self.class_index = {}
+        self.wn_lemma_idx = self.wordnet.lemma_index()
+        self.wn_synset_idx = self.wordnet.synset_index()
+        if category == NOUN:
+            self._create_noun_cltypes()
+            self.write_nouns()
+            self.pp_nouns()
+        elif category == VERB:
+            self._create_verb_cltypes()
+            self.write_verbs()
+            self.pp_verbs()
+
+    def write(self):
+        if self.category == NOUN:
+            self.write_nouns()
+            self.pp_nouns()
+            
+    def corelex_file(self, category, extension='tab'):
+        return "data/corelex-%s-%ss.%s" % (self.version, category, extension)
+
+    def _create_noun_cltypes(self):
         type_relations = self._get_type_relations()
         for lemma in sorted(self.wn_lemma_idx[NOUN].keys()):
             word = self.wordnet.get_noun(lemma)
-            synsets = [wordnet.get_noun_synset(synset) for synset in word.synsets]
+            synsets = [self.wordnet.get_noun_synset(synset) for synset in word.synsets]
             basic_types = get_basic_types(synsets)
-            filter_basic_types(basic_types, type_relations)
             corelex_class = ' '.join(sorted(basic_types))
-            self.word_index[word] = corelex_class
+            self.lemma_index[word] = corelex_class
             self.class_index.setdefault(corelex_class, []).append(word)
 
-    def _load_from_file(self):
-        data_file = "data/corelex-%s-%ss.tab" % (self.version, self.category)
-        with open(data_file) as fh:
-            for line in fh:
-                corelex_class, words = line.strip().split("\t")
-                for word in words.split():
-                    self.word_index[word] = corelex_class
-                    self.class_index.setdefault(corelex_class, []).append(word)
-            print("Loaded %d words and %d CoreLex classes\n"
-                  % (len(self.word_index), len(self.class_index)))
-
-    def _load_corelex_types(self):
-        for cltype, classes in cltypes.CORELEX_TYPES.items():
-            self.corelex_type_to_class[cltype] = classes
-            for classs in classes:
-                self.class_to_corelex_type[classs] = cltype
+    def _create_verb_cltypes(self):
+        for lemma in sorted(self.wn_lemma_idx[VERB].keys()):
+            word = self.wordnet.get_verb(lemma)
+            synsets = [self.wordnet.get_synset(VERB, synset) for synset in word.synsets]
+            basic_types = get_basic_types(synsets)
+            corelex_class = ' * '.join(sorted(basic_types))
+            self.lemma_index[lemma] = corelex_class
+            self.class_index.setdefault(corelex_class, []).append(lemma)
 
     def _get_type_relations(self):
         if self.wordnet.version == '1.5':
             return cltypes.BASIC_TYPES_ISA_RELATIONS_1_5
         return cltypes.BASIC_TYPES_ISA_RELATIONS_3_1
 
-    def write(self, filename):
+    def write_nouns(self):
+        filename = self.corelex_file(NOUN, 'tab')
         print("Writing CoreLex to", filename)
         fh = open(filename, 'w')
         for cl_class in sorted(self.class_index.keys()):
             lemmas = [w.lemma for w in self.class_index[cl_class]]
             fh.write("%s\t%s\n" % (cl_class, ' '.join(lemmas)))
+
+    def pp_nouns(self):
+        filename = self.corelex_file(NOUN, 'txt')
+        print("Writing CoreLex to", filename)
+        fh = open(filename, 'w')
+        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
+        for cl_class in sorted(self.class_index.keys()):
+            fh.write("%s\n\n" % cl_class)
+            lemmas = [w.lemma for w in self.class_index[cl_class]]
+            for line in tw.wrap(' '.join(lemmas)):
+                fh.write(line + "\n")
+            fh.write("\n")
+
+    def write_verbs(self):
+        filename = self.corelex_file(VERB, 'tab')
+        print("Writing CoreLex to", filename)
+        fh = open(filename, 'w')
+        for cl_class in sorted(self.class_index.keys()):
+            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
+
+    def pp_verbs(self):
+        filename = self.corelex_file(VERB, 'txt')
+        print("Writing CoreLex to", filename)
+        fh = open(filename, 'w')
+        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
+        for cl_class in sorted(self.class_index.keys()):
+            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                fh.write("%s\n\n" % cl_class)
+                for line in tw.wrap(' '.join(self.class_index[cl_class])):
+                    fh.write(line + "\n")
+                fh.write("\n")
+
+
+    
+class CoreLex(object):
+
+    def __init__(self, version='3.1', category=NOUN, wordnet=None):
+        self.category = expand(category)
+        self.version = version
+        self.lemma_index = {}
+        self.class_index = {}
+        self.corelex_type_to_class = {}
+        self.class_to_corelex_type = {}
+        self._load_corelex_types()
+        self._load_corelex()
+
+    def _load_corelex_types(self):
+        """Load the corelex types from the cltypes module."""
+        for cltype, classes in cltypes.CORELEX_TYPES.items():
+            self.corelex_type_to_class[cltype] = classes
+            for class_ in classes:
+                self.class_to_corelex_type[class_] = cltype
+
+    def _load_corelex(self):
+        data_file = "data/corelex-%s-%ss.tab" % (self.version, self.category)
+        with open(data_file) as fh:
+            for line in fh:
+                corelex_class, words = line.strip().split("\t")
+                for word in words.split():
+                    self.lemma_index[word] = corelex_class
+                    self.class_index.setdefault(corelex_class, []).append(word)
+            print("Loaded %d words and %d CoreLex classes\n"
+                  % (len(self.lemma_index), len(self.class_index)))
 
     def write_tables(self):
         basic_types_sql = "sql/corelex-%s-basic-types-%ss.sql" \
@@ -196,26 +369,15 @@ class CoreLex(object):
         noun_table = open(nouns_sql, 'w')
         string_buffer = io.StringIO()
         noun_table.write("INSERT INTO nouns (noun, corelex_type, polysemous_type) VALUES\n")
-        for word in self.word_index:
-            pclass = self.word_index[word]
+        for word in self.lemma_index:
+            pclass = self.lemma_index[word]
             cltype = self.class_to_corelex_type.get(pclass, '-')
             string_buffer.write("   ('%s', '%s', '%s'),\n"
                                 % (word.replace("'", r"\'"), cltype, pclass))
         noun_table.write(string_buffer.getvalue()[:-2] + ";\n")
         noun_table.close()
         print("Wrote %d types to file %s" % (len(basic_types), basic_types_sql))
-        print("Wrote %d words to file %s\n" % (len(self.word_index), nouns_sql))
-
-    def pp(self, filename):
-        print("Writing CoreLex to", filename)
-        fh = open(filename, 'w')
-        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
-        for cl_class in sorted(self.class_index.keys()):
-            fh.write("%s\n\n" % cl_class)
-            lemmas = [w.lemma for w in self.class_index[cl_class]]
-            for line in tw.wrap(' '.join(lemmas)):
-                fh.write(line + "\n")
-            fh.write("\n")
+        print("Wrote %d words to file %s\n" % (len(self.lemma_index), nouns_sql))
 
     def pp_summary(self):
         total_count = 0
@@ -224,42 +386,6 @@ class CoreLex(object):
             print("%s\t%d" % (cl_class, len(self.class_index[cl_class])))
         print("TOTAL\t%d" % total_count)
 
-
-class CoreLexVerbs(object):
-
-    def __init__(self, wordnet):
-        self.wordnet = wordnet
-        self.category = wordnet.category
-        self.wn_lemma_idx = wordnet.lemma_index()
-        self.wn_synset_idx = wordnet.synset_index()
-        self.word_index = {}
-        self.class_index = {}
-        print("Creating CoreLex...")
-        for lemma in sorted(self.wn_lemma_idx[VERB].keys()):
-            word = self.wordnet.get_verb(lemma)
-            synsets = [wordnet.get_synset(VERB, synset) for synset in word.synsets]
-            basic_types = get_basic_types(synsets)
-            corelex_class = ' * '.join(sorted(basic_types))
-            self.word_index[lemma] = corelex_class
-            self.class_index.setdefault(corelex_class, []).append(lemma)
-
-    def write(self, filename):
-        print("Writing CoreLex to", filename)
-        fh = open(filename, 'w')
-        for cl_class in sorted(self.class_index.keys()):
-            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
-                fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
-
-    def pp(self, filename):
-        print("Writing CoreLex to", filename)
-        fh = open(filename, 'w')
-        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
-        for cl_class in sorted(self.class_index.keys()):
-            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
-                fh.write("%s\n\n" % cl_class)
-                for line in tw.wrap(' '.join(self.class_index[cl_class])):
-                    fh.write(line + "\n")
-                fh.write("\n")
 
 
 class UserLoop(object):
@@ -312,14 +438,14 @@ class UserLoop(object):
             self.mode = UserLoop.MAIN_MODE
         else:
             choice = choice.replace(' ', '_')
-            if choice in self.corelex.word_index:
+            if choice in self.corelex.lemma_index:
                 self.search_term = choice
                 self.mode = UserLoop.WORD_MODE
             else:
                 print("Not in CoreLex")
 
     def word_mode(self):
-        corelex_class = self.corelex.word_index[self.search_term]
+        corelex_class = self.corelex.lemma_index[self.search_term]
         self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
         print("\n%s -- %s" % (bold(self.search_term), corelex_class))
         self.print_choices()
@@ -342,94 +468,11 @@ class UserLoop(object):
             print("[%s]  %s" % (choice, description))
 
 
-def test_paths_top_top(wn):
-    act = wn.get_synset('00016649')
-    compound = wn.get_synset('08907331')
-    cat = wn.get_synset('05987089')
-    woman = cat.hypernyms()[1]
-    for ss in (act, compound, cat, woman):
-        print()
-        ss.pp_paths_to_top()
-
-
-def create_corelex_from_wordnet(version, category):
-
-    """Create CoreLex files from a WordNet version for the category specified."""
-
-    if not version in ('1.5', '3.1'):
-        exit("ERROR: unsupported wordnet version")
-    if not category in ('n', 'v'):
-        exit("ERROR: unsupported category")
-    wn = WordNet(version, category)    
-    if category == 'n':
-        print("Adding basic types...")
-        wn.add_nominal_basic_types()
-        print("Creating CoreLex...")
-        cl = CoreLex(category=category, version=version, wordnet=wn)
-        cl.write("data/corelex-%s-nouns.tab" % version)
-        cl.pp("data/corelex-%s-nouns.txt" % version)
-    elif category == 'v':
-        wn.add_verbal_basic_types()
-        cl = CoreLexVerbs(wn)
-        cl.write("data/corelex-%s-verbs.tab" % version)
-        cl.pp("data/corelex-%s-verbs.txt" % version)
-
-
-def create_basic_type_relations1(version, category):
-
-    """Collect all relations and then turn them into relations between basic
-    types. Store the relations not as individual relations but as a relation
-    signature between basic types, where the signature specifies how many
-    relations of a given type occur between the two types.
-    synsets. Files created:
-
-       data/corelex-VERSION-CATEGORY-relations.txt
-       data/corelex-VERSION-CATEGORY-basic-type-relations.txt
-
-    The first has all relations as 5-tuples with basic types, pointers and the
-    members of the source and target synsets. The second has the relation
-    signatures between basic type pairs.
-
-    """
-
-    # collecting relations and relation signatures
-    wn = WordNet(version, category)
-    wn.add_nominal_basic_types()
-    wn.pp_nouns(['abstraction', 'door', 'woman', 'chicken', 'aachen'])
-    bt_relations = wn.get_all_basic_type_relations(NOUN)
-    bt_relation_index = {}
-    for bt_relation in bt_relations:
-        pair = (bt_relation[0], bt_relation[2])
-        rel = bt_relation[1]
-        if pair not in bt_relation_index:
-            bt_relation_index[pair] = {}
-        bt_relation_index[pair][rel] = bt_relation_index[pair].get(rel, 0) + 1
-
-    # writing results
-    c = expand(category)
-    relations = 'data/corelex-%s-%ss-relations.txt' % (version, c)
-    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (version, c)
-    with open(relations, 'w') as fh:
-        for bt_relation in bt_relations:
-            source = bt_relation[3]
-            target = bt_relation[4]
-            fh.write("%s\t%s\t%s\n" % ("\t".join(bt_relation[:3]),
-                                       source.words_as_string(),
-                                       target.words_as_string()))
-    with open(basicrels, 'w') as fh:
-        for pair in sorted(bt_relation_index.keys()):
-            if pair[0] != pair[1]:
-                fh.write("%s-%s" % (pair[0], pair[1]))
-                for k,v in bt_relation_index[pair].items():
-                    fh.write("\t%s %s" % (k, v))
-                fh.write("\n")
-
-
-
 class BasicTypeRelations(object):
 
-    def __init__(self, version, category):
-        self.version = version
+    def __init__(self, wordnet, category):
+        self.wordnet = wordnet
+        self.version = wordnet.version
         self.category = category
         self.btrels1 = {}                  # basic type relations
         self.btrels2 = {}                  # significant basic type relations
@@ -460,8 +503,11 @@ class BasicTypeRelations(object):
         with open(fname) as fh:
             for line in fh:
                 fields = line.strip().split("\t")
-                basic_rel = "%s-%s" % (fields[0], fields[2])
-                self.allrels.setdefault(basic_rel, []).append(fields)
+                bt1, pointer, bt2, ss1_id, ss2_id = fields
+                basic_rel = "%s-%s" % (bt1, bt2)
+                ss1 = self.wordnet.get_noun_synset(ss1_id)
+                ss2 = self.wordnet.get_noun_synset(ss2_id)
+                self.allrels.setdefault(basic_rel, []).append([bt1, pointer, bt2, ss1, ss2])
 
     def calculate_distribution(self):
         """Return a distribution of all relations in all basic type pairs. This will be
@@ -538,6 +584,9 @@ class RelationsWriter(object):
         fh.write("a:visited { text-decoration: none; }\n")
         fh.write("a:hover { text-decoration: underline; }\n")
         fh.write("a:active { text-decoration: underline; }\n")
+        fh.write(".blue { color: blue; }\n")
+        fh.write(".green { color: green; }\n")
+        fh.write("dd { margin-bottom: 20px; }\n")
         fh.write("</style>\n</head>\n")
 
     def _ensure_directories(self):
@@ -560,14 +609,22 @@ class RelationsWriter(object):
             for cell in cells:
                 fh.write("<a name=%s></a>\n" % cell.category)
                 fh.write("<p>%s  (%s)</p>\n" % (POINTER_SYMBOLS.get(cell.category), cell.category))
-                fh.write("<blockquote>\n")
-                fh.write("<table cellpadding=5 cellspacing=0 border=1>\n")
                 rels = self.btr.allrels[name]
+                grouped_rels = {}
                 for rel in rels:
-                    if cell.category == rel[1]:
-                        fh.write("<tr><td>%s</td><td>%s</td></tr>\n" % (simplify(rel[3]), simplify(rel[4])))
-                fh.write("</table>\n")
-                fh.write("</blockquote>\n")
+                    source = rel[3]
+                    target = rel[4]
+                    grouped_rels.setdefault(source.id, [source, []])
+                    grouped_rels[source.id][1].append(target)
+                fh.write("<blockquote>\n<dl>\n")
+                for synset_id in grouped_rels:
+                    source, targets = grouped_rels[synset_id]
+                    fh.write("  <dt>%s</dt>\n" % source.as_html())
+                    fh.write("  <dd>\n")
+                    for target in targets:
+                        fh.write("%s<br/>" % target.as_html())
+                    fh.write("  </dd>\n")
+                fh.write("</dl>\n</blockquote>\n")
 
     def _write_pair_description(self, fh, bt1, bt2):
         fh.write('<p>{')
@@ -579,68 +636,44 @@ class RelationsWriter(object):
         fh.write('}</p>\n')
 
 
-def simplify(synset_name):
-    fields = synset_name.split()
-    fields = [f.split('.')[0] for f in fields] 
-    return '&nbsp;'.join(fields)
-
-
-def create_basic_type_relations2(version, category):
-    btr = BasicTypeRelations(version, category)
-    btr.calculate_distribution()
-    btr.collect_significant_relations()
-    #write_significant_relations(version, category, btr.distribution, btr.btrels2, btr.allrels)
-    rw = RelationsWriter(btr)
-    rw.write()
-    
-            
-def scratch(version, category):
-
-    """For whatever I am experimenting with."""
-
-    create_basic_type_relations2(version, category)
-
-
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 3:
-        print_usage()
-        exit()
-
+    flag = sys.argv[1]
     version = sys.argv[2]
-    category = sys.argv[3]
+    if len(sys.argv) > 3:
+        category = sys.argv[3]
 
-    if sys.argv[1] == '--create':
-        create_corelex_from_wordnet(version, category)
+    if flag == '--create-lemma-to-cltype-files':
+        create_lemma_to_cltype_files(version)
 
-    elif sys.argv[1] == '--sql':
+    elif flag == '--sql':
         if category == 'n':
             cl = CoreLex(version=version, category=NOUN)
             cl.write_tables()
         else:
             exit("This does not work for verbs yet")
 
-    elif sys.argv[1] == '--btyperels1':
+    elif flag == '--btyperels1':
         if category == 'n':
             create_basic_type_relations1(version, category)
         else:
             exit("This does not work for verbs yet")
 
-    elif sys.argv[1] == '--btyperels2':
+    elif flag == '--btyperels2':
         if category == 'n':
             create_basic_type_relations2(version, category)
         else:
             exit("This does not work for verbs yet")
 
-    elif sys.argv[1] == '--browse':
+    elif flag == '--browse':
         if category == 'n':
             cl = CoreLex(category=NOUN)
         else:
             exit("This does not work for verbs yet")
         UserLoop(cl)
 
-    elif sys.argv[1] == '-s':
+    elif flag == '-s':
         scratch(version, category)
 
     else:

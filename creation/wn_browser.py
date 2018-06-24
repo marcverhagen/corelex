@@ -19,6 +19,23 @@ if sys.version_info.major < 3:
 
 class UserLoop(object):
 
+    """For user interaction via the command line. The way this works is that the
+    system will always be in a particular, which on initialization is the main
+    mode. Each mode is associated with a method and that method does three
+    things:
+
+    1. Perform some action. For example, in synset mode the synset is printed to
+       the terminal. This action can be empty.
+
+    2. Print choices for next steps to the terminal. This tells the user what
+       the next action in the user loop can be. The last part here is to
+       sollicit the user's choice.
+
+    3. Determine what the next mode is given the user response. This includes
+       changing th emode if needed.
+
+    """
+    
     MAIN_MODE = 'MAIN_MODE'
     SEARCH_MODE = 'SEARCH_MODE'
     WORD_MODE = 'WORD_MODE'
@@ -40,6 +57,9 @@ class UserLoop(object):
         self.run()
 
     def run(self):
+        """The loop itself. Keep executing the method associated with the current
+        mode. Breaking out of the loop happens inside the mode methods using the
+        exit() method."""
         while True:
             print()
             if self.mode == UserLoop.MAIN_MODE:
@@ -106,11 +126,6 @@ class UserLoop(object):
         else:
             print("Not a valid choice")
 
-    def print_choices(self):
-        print()
-        for choice, description in self.choices:
-            print("[%s]  %s" % (choice, description))
-
     def synset_mode(self):
         self.synset.pp()
         self.choices = [('b', 'back to the word'), ('s', 'search'), ('h', 'home'), ('q', 'quit') ]
@@ -139,8 +154,13 @@ class UserLoop(object):
         # printing the entity tree
         if self.category == NOUN and self.wn.version == '3.1':
             print('\nEntity tree (4 levels deep):\n')
-            self.synset_idx.get('00001740').pp_tree(4)
+            self.synset_idx[NOUN].get('00001740').pp_tree(4)
         self.mode = UserLoop.MAIN_MODE
+
+    def print_choices(self):
+        print()
+        for choice, description in self.choices:
+            print("[%s]  %s" % (choice, description))
 
 
 if __name__ == '__main__':
