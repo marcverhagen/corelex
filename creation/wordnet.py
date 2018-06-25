@@ -314,6 +314,9 @@ class WordNet(object):
             # skip hypernyms and hyponyms
             if pointer.symbol in ('~', '~i', '@', '@i'):
                 continue
+            # skip lexical links
+            if pointer.pointer_type != '0000':
+                continue
             target_synset = self.get_noun_synset(pointer.target_synset)
             # some pointers are not to nouns, skip them
             if target_synset is None:
