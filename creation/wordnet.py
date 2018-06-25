@@ -49,6 +49,15 @@ NOUN = 'noun'
 VERB = 'verb'
 
 
+POINTER_SYMBOL_LIST = [
+
+    '!', '@', '@i', '~', '~i', '#m', '#s', '#p', '%m', '%s', '%p', '=', '+',
+    ';c', ';r', ';u', '-c', '-r', '-u',
+    '*', '>', '^', '$', '+',
+    '&', '<', '\\', '='
+]
+
+
 POINTER_SYMBOLS = {
 
     '!': 'Antonym',
@@ -556,11 +565,8 @@ class Synset(object):
         if self.hypernyms():
             print()
             self.pp_paths_to_top('  ')
-        self.pp_hypernyms()
-        self.pp_hyponyms()
-        self.pp_holonyms()
-        self.pp_meronyms()
-        self.pp_antonyms()
+        for symbol in POINTER_SYMBOL_LIST:
+            self.pp_related_synsets(POINTER_SYMBOLS.get(symbol), pointer_symbols=[symbol])
         # not doing these because they can go to different categories
         # self.pp_attributes()
         
@@ -585,60 +591,36 @@ class Synset(object):
             print()
         print()
 
-    def pp_hypernyms(self):
-        hypernyms = self.hypernyms()
-        if hypernyms:
-            print('\n  %s' % blue('hypernyms'))
-            for synset in hypernyms:
+    def pp_related_synsets(self, name, synsets=None, pointer_symbols=None):
+        if synsets is None:
+            synsets = self.get_pointers(pointer_symbols)
+        # doing this filter since for now we do not find related synsets that do
+        # not have the same category
+        synsets = [ss for ss in synsets if ss is not None]
+        if synsets:
+            print('\n  %s' % blue(name))
+            for synset in synsets:
                 print('    [%d] %s' % (self.count, synset.as_formatted_string()))
                 self.mappings[self.count] = synset
                 self.count +=1
+
+    def pp_hypernyms(self):
+        self.pp_related_synsets('hypernyms', self.hypernyms())
 
     def pp_hyponyms(self):
-        hyponyms = self.hyponyms()
-        if hyponyms:
-            print('\n  %s' % blue('hyponyms'))
-            for synset in hyponyms:
-                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
-                self.mappings[self.count] = synset
-                self.count +=1
+        self.pp_related_synsets('hyponyms', self.hyponyms())
 
     def pp_holonyms(self):
-        holonyms = self.holonyms()
-        if holonyms:
-            print('\n  %s' % blue('holonyms'))
-            for synset in holonyms:
-                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
-                self.mappings[self.count] = synset
-                self.count +=1
+        self.pp_related_synsets('holonyms', self.holonyms())
 
     def pp_meronyms(self):
-        meronyms = self.meronyms()
-        if meronyms:
-            print('\n  %s' % blue('meronyms'))
-            for synset in meronyms:
-                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
-                self.mappings[self.count] = synset
-                self.count +=1
+        self.pp_related_synsets('meronyms', self.meronyms())
 
     def pp_antonyms(self):
-        antonyms = self.antonyms()
-        if antonyms:
-            print('\n  %s' % blue('antonyms'))
-            for synset in antonyms:
-                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
-                self.mappings[self.count] = synset
-                self.count +=1
+        self.pp_related_synsets('antonyms', self.antonyms())
 
     def pp_attributes(self):
-        attributes = self.attributes()
-        print(attributes)
-        if attributes:
-            print('\n  %s' % blue('attributes'))
-            for synset in attributes:
-                print('    [%d] %s' % (self.count, synset.as_formatted_string()))
-                self.mappings[self.count] = synset
-                self.count +=1
+        self.pp_related_synsets('attributes', self.attributes())
 
     def pp_tree(self, levels, indent=''):
         if levels == 0:
