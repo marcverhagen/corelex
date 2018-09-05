@@ -1,9 +1,13 @@
 """
 
-$ python3 wn_browser.py <version> <category>
+Command line browser for WordNet, including added CoreLex basic types for nouns.
 
-<version> is 1.5 or 3.1
-<category> is noun or verb
+Usage:
+
+    $ python3 browse.py <version> <category>
+
+    <version> is 1.5 or 3.1
+    <category> is noun or verb
 
 """
 

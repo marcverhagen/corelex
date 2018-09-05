@@ -8,7 +8,7 @@ Usage:
    $ python3 corelex.py --btyperels1 <version> <category>
    $ python3 corelex.py --btyperels2 <version> <category>
    $ python3 corelex.py --browse <version> <category>
-   $ python3 corelex.py --sql <version> <category>
+   $ python3 corelex.py --sql <version>
 
    where <version> is 1.5 or 3.1 and <category> is n or v
 
@@ -61,14 +61,17 @@ This does not yet work for verbs.
 
    $ python3 corelex.py --browse 1.5 n
 
+This is now mostly deprecated because the wordnet browser in browse.py
+basically shows all information shown by the corelex browser.
+
 This does not yet work for verbs.
 
 
 ==> Exporting CoreLex as SQL files
 
-This assumes that the corelex-<version>-<category>.tab files have been created.
+This assumes that the corelex-<version>-nouns.tab file has been created.
 
-   $ python3 corelex.py --sql 1.5 n
+   $ python3 corelex.py --sql 1.5
 
 This creates two files:
 

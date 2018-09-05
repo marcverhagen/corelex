@@ -524,11 +524,13 @@ class Synset(object):
         return self.get_pointers(['='])
 
     def get_pointers(self, pointer_list):
+        # include only semantic pointers
         pointers = []
         for symbol in pointer_list:
             pointers.extend(self.pointers.get(symbol, []))
-        return [self.wn.get_synset(self.cat, p.target_synset) for p in pointers]
-            
+        return [self.wn.get_synset(self.cat, p.target_synset)
+                for p in pointers if p.pointer_type == '0000']
+
     def paths_to_top(self):
         hypernyms = self.hypernyms()
         if not hypernyms:

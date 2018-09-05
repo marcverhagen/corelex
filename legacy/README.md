@@ -13,7 +13,7 @@ data/corelex_nouns.basictypes.txt
 data/CoreLex
 ```
 
-The `CoreLex` contains the static HTML files that comprise the old static CoreLex pages at http://www.cs.brandeis.edu/~paulb/CoreLex/overview.html.
+The `CoreLex` file contains the static HTML files that comprise the old static CoreLex pages at http://www.cs.brandeis.edu/~paulb/CoreLex/overview.html.
 
 To create database tables from these sources you can run
 
