@@ -4,30 +4,40 @@ Script to create CoreLex from WordNet.
 
 Usage:
 
-   $ python3 corelex.py --create-lemma-to-cltype-files <version>
+   $ python3 corelex.py --create-cltype-files <version>
    $ python3 corelex.py --btyperels1 <version> <category>
    $ python3 corelex.py --btyperels2 <version> <category>
-   $ python3 corelex.py --browse <version> <category>
    $ python3 corelex.py --sql <version>
 
    where <version> is 1.5 or 3.1 and <category> is n or v
+   <version> refers to the WordNet version
 
 
 ==> Creating CoreLex files from WordNet
 
 For example, to create CoreLex types for lemmas in WordNet 1.5:
 
-   $ python3 corelex.py --create-lemma-to-cltype-files 1.5
+   $ python3 corelex.py --create-cltype-files 3.1
 
-This loads WordNet 1.5 using the wordnet.py module and then creates four files:
+This loads WordNet 3.1 using the wordnet.py module and then creates six files:
 
-   data/corelex-1.5-nouns.tab
-   data/corelex-1.5-nouns.txt
-   data/corelex-1.5-verbs.tab
-   data/corelex-1.5-verbs.txt
+   data/corelex-2.0-cltypes-nouns.tab
+   data/corelex-2.0-cltypes-nouns.txt
+   data/corelex-2.0-cltypes-verbs.tab
+   data/corelex-2.0-cltypes-verbs.txt
+   data/corelex-2.0-nouns.tab
+   data/corelex-2.0-verbs.tab
 
-The tab files can later be used to load CoreLex, the txt files contain the same
-data but are easier on the eye.
+Note that the WordNet version is not the same as the CoreLex version. In this
+case we used WordNet 3.1 and we created CoreLex 2.0, as specified by the
+CORELEX_VERSION global variable. If we had used WordNet 1.5 then we would have
+created CoreLex x.x. See the comment just above the CORELEX_VERSION variable for
+more on this.
+
+The cltypes files contain mappings from cltypes (or rather, polysemous types) to
+lemmas. The cltypes tab files can later be used to load CoreLex, the cltypes txt
+files contain the same data but are easier on the eye. Thelemma files have the
+reverse mappings, from lemmas to cltypes.
 
 
 ==> Creating basic types relations from WordNet
@@ -56,15 +66,7 @@ pages with more comprehensive views of the relations.
 
 This does not yet work for verbs.
 
-
-==> Browsing CoreLex
-
-   $ python3 corelex.py --browse 1.5 n
-
-This is now mostly deprecated because the wordnet browser in browse.py
-basically shows all information shown by the corelex browser.
-
-This does not yet work for verbs.
+This is experimental.
 
 
 ==> Exporting CoreLex as SQL files
@@ -95,6 +97,18 @@ from wordnet import WordNet, NOUN, VERB, POINTER_SYMBOLS, expand
 import cltypes
 from utils import index_file, data_file, flatten, bold
 from statistics import Distribution, ChiSquaredCell
+
+
+# The versioning is a bit tricky. The old legacy CoreLex has no number, so we
+# started at 2.0 here. We stipulate that CoreLex 2.0 is created from WordNet
+# 3.1. The version number below is ignored when we use WordNet 1.5, in that case
+# we use version x.x. CoreLex x.x is similar but not identical to the legacy
+# CoreLex. Note that when this code changes what is created as CoreLex x.x may
+# also change, but it will always be created from WordNet 1.5. In general this
+# should be a moot point because there is really no good reason anymore to
+# create version x.x.
+
+CORELEX_VERSION = open("../VERSION").read().strip()
 
 
 ### Top-level methods that are executed driven by user flags
@@ -160,14 +174,16 @@ def create_basic_type_relations2(version, category):
     
 
 def scratch(version, category):
-
     """For whatever I am experimenting with."""
-
     wn = WordNet(version, category)
     wn.pp_nouns(['abstraction', 'door', 'woman', 'chicken', 'aachen'])
 
 
 ### Utilities
+
+def get_corelex_version(wn_version):
+    return 'x.x' if wn_version == '1.5' else CORELEX_VERSION
+
 
 def get_basic_types(synsets):
     basic_types = set()
@@ -185,10 +201,9 @@ def filter_basic_types(set_of_basic_types, type_relations):
 
 def print_usage():
     print("\nUsage:\n",
-          "   $ python3 corelex.py --create-lemma-to-cltype-files <version>\n",
+          "   $ python3 corelex.py --create-cltype-files <version>\n",
           "   $ python3 corelex.py --btyperels1 <version> <category>\n",
           "   $ python3 corelex.py --btyperels2 <version> <category>\n",
-          "   $ python3 corelex.py --browse <version> <category>\n",
           "   $ python3 corelex.py --sql <version> <category>\n")
 
 
@@ -219,10 +234,12 @@ class CoreLexTypeGenerator(object):
     and corelex types. These mappings can then later be loaded into an instance of
     the CoreLex class. It creates the following files:
 
+       data/corelex-VERSION-cltypes-nouns.tab
+       data/corelex-VERSION-cltypes-nouns.txt
+       data/corelex-VERSION-cltypes-verbs.tab
+       data/corelex-VERSION-cltypes-verbs.txt
        data/corelex-VERSION-nouns.tab
-       data/corelex-VERSION-nouns.txt
        data/corelex-VERSION-verbs.tab
-       data/corelex-VERSION-verbs.txt
 
     The tab files are read into CoreLex and the txt files contain the same data
     but more pleasant to the eye.
@@ -233,26 +250,25 @@ class CoreLexTypeGenerator(object):
         self.wordnet = wordnet
         self.category = expand(category)
         self.version = wordnet.version
+        self.cl_version = get_corelex_version(wordnet.version)
         self.lemma_index = {}
         self.class_index = {}
         self.wn_lemma_idx = self.wordnet.lemma_index()
         self.wn_synset_idx = self.wordnet.synset_index()
         if category == NOUN:
             self._create_noun_cltypes()
-            self.write_nouns()
             self.pp_nouns()
+            self.write_nouns()
         elif category == VERB:
             self._create_verb_cltypes()
-            self.write_verbs()
             self.pp_verbs()
+            self.write_verbs()
 
-    def write(self):
-        if self.category == NOUN:
-            self.write_nouns()
-            self.pp_nouns()
-            
-    def corelex_file(self, category, extension='tab'):
-        return "data/corelex-%s-%ss.%s" % (self.version, category, extension)
+    def corelex_cltype_file(self, category, extension='tab'):
+        return "data/corelex-%s-cltypes-%ss.%s" % (self.cl_version, category, extension)
+
+    def corelex_lemma_file(self, category, extension='tab'):
+        return "data/corelex-%s-lemmas-%ss.%s" % (self.cl_version, category, extension)
 
     def _create_noun_cltypes(self):
         type_relations = self._get_type_relations()
@@ -279,16 +295,26 @@ class CoreLexTypeGenerator(object):
         return cltypes.BASIC_TYPES_ISA_RELATIONS_3_1
 
     def write_nouns(self):
-        filename = self.corelex_file(NOUN, 'tab')
-        print("Writing CoreLex to", filename)
-        fh = open(filename, 'w')
-        for cl_class in sorted(self.class_index.keys()):
-            lemmas = [w.lemma for w in self.class_index[cl_class]]
-            fh.write("%s\t%s\n" % (cl_class, ' '.join(lemmas)))
+        filename1 = self.corelex_cltype_file(NOUN, 'tab')
+        filename2 = self.corelex_lemma_file(NOUN, 'tab')
+        print("Writing", filename1)
+        with open(filename1, 'w') as fh:
+            for cl_class in sorted(self.class_index.keys()):
+                lemmas = [w.lemma for w in self.class_index[cl_class]]
+                fh.write("%s\t%s\n" % (cl_class, ' '.join(lemmas)))
+        print("Writing", filename2)
+        with open(filename1) as fh1, open(filename2, 'w') as fh2:
+            lemma_list = []
+            for line in fh1:
+                cltype, lemmas = line.strip().split("\t")
+                for lemma in lemmas.split():
+                    lemma_list.append("%s\t%s\n" % (lemma, cltype))
+            for lemma in sorted(lemma_list):
+                fh2.write(lemma)
 
     def pp_nouns(self):
-        filename = self.corelex_file(NOUN, 'txt')
-        print("Writing CoreLex to", filename)
+        filename = self.corelex_cltype_file(NOUN, 'txt')
+        print("Writing", filename)
         fh = open(filename, 'w')
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         for cl_class in sorted(self.class_index.keys()):
@@ -299,16 +325,26 @@ class CoreLexTypeGenerator(object):
             fh.write("\n")
 
     def write_verbs(self):
-        filename = self.corelex_file(VERB, 'tab')
-        print("Writing CoreLex to", filename)
-        fh = open(filename, 'w')
-        for cl_class in sorted(self.class_index.keys()):
-            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
-                fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
+        filename1 = self.corelex_cltype_file(VERB, 'tab')
+        filename2 = self.corelex_lemma_file(VERB, 'tab')
+        print("Writing", filename1)
+        with open(filename1, 'w') as fh:
+            for cl_class in sorted(self.class_index.keys()):
+                if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                    fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
+        print("Writing", filename2)
+        with open(filename1) as fh1, open(filename2, 'w') as fh2:
+            lemma_list = []
+            for line in fh1:
+                cltype, lemmas = line.strip().split("\t")
+                for lemma in lemmas.split():
+                    lemma_list.append("%s\t%s\n" % (lemma, cltype))
+            for lemma in sorted(lemma_list):
+                fh2.write(lemma)
 
     def pp_verbs(self):
-        filename = self.corelex_file(VERB, 'txt')
-        print("Writing CoreLex to", filename)
+        filename = self.corelex_cltype_file(VERB, 'txt')
+        print("Writing", filename)
         fh = open(filename, 'w')
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         for cl_class in sorted(self.class_index.keys()):
@@ -389,86 +425,6 @@ class CoreLex(object):
             print("%s\t%d" % (cl_class, len(self.class_index[cl_class])))
         print("TOTAL\t%d" % total_count)
 
-
-
-class UserLoop(object):
-
-    # TODO: there may be too many similarities with the wn_browser UserLoop
-
-    MAIN_MODE = 'MAIN_MODE'
-    SEARCH_MODE = 'SEARCH_MODE'
-    WORD_MODE = 'WORD_MODE'
-    SYNSET_MODE = 'SYNSET_MODE'
-    STATS_MODE = 'STATS_MODE'
-
-    PROMPT = "\n%s " % bold('>>')
-
-
-    def __init__(self, corelex):
-        self.corelex = corelex
-        self.category = self.corelex.category
-        self.mode = UserLoop.MAIN_MODE
-        self.search_term = None
-        self.run()
-
-    def run(self):
-        while True:
-            if self.mode == UserLoop.MAIN_MODE:
-                self.main_mode()
-            elif self.mode == UserLoop.SEARCH_MODE:
-                self.search_mode()
-            elif self.mode == UserLoop.WORD_MODE:
-                self.word_mode()
-
-    def main_mode(self):
-        self.choices = [('s', 'search ' + self.category), ('q', 'quit') ]
-        self.print_choices()
-        choice = input(UserLoop.PROMPT)
-        if choice == 'q':
-            exit()
-        elif choice == 's':
-            self.mode = UserLoop.SEARCH_MODE
-        elif choice == 'a':
-            self.mode = UserLoop.STATS_MODE
-        else:
-            print("Not a valid choice")
-
-    def search_mode(self):
-        print('\nEnter a %s to search in CoreLex' % self.category)
-        print('Enter return to go to the home screen')
-        choice = input(UserLoop.PROMPT)
-        if choice == '':
-            self.mode = UserLoop.MAIN_MODE
-        else:
-            choice = choice.replace(' ', '_')
-            if choice in self.corelex.lemma_index:
-                self.search_term = choice
-                self.mode = UserLoop.WORD_MODE
-            else:
-                print("Not in CoreLex")
-
-    def word_mode(self):
-        corelex_class = self.corelex.lemma_index[self.search_term]
-        self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
-        print("\n%s -- %s" % (bold(self.search_term), corelex_class))
-        self.print_choices()
-        choice = input(UserLoop.PROMPT)
-        if choice == 'q':
-            exit()
-        if choice == 'h':
-            self.mode = UserLoop.MAIN_MODE
-        elif choice == 's':
-            self.mode = UserLoop.SEARCH_MODE
-        elif choice.startswith('s '):
-            self.search_term = choice[2:]
-            self.mode = UserLoop.WORD_MODE
-        else:
-            print("Not a valid choice")
-
-    def print_choices(self):
-        print()
-        for choice, description in self.choices:
-            print("[%s]  %s" % (choice, description))
 
 
 class BasicTypeRelations(object):
@@ -653,7 +609,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 3:
         category = sys.argv[3]
 
-    if flag == '--create-lemma-to-cltype-files':
+    if flag == '--create-cltype-files':
         create_lemma_to_cltype_files(version)
 
     elif flag == '--sql':
@@ -674,13 +630,6 @@ if __name__ == '__main__':
             create_basic_type_relations2(version, category)
         else:
             exit("This does not work for verbs yet")
-
-    elif flag == '--browse':
-        if category == 'n':
-            cl = CoreLex(category=NOUN)
-        else:
-            exit("This does not work for verbs yet")
-        UserLoop(cl)
 
     elif flag == '-s':
         scratch(version, category)

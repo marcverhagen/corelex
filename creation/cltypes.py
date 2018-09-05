@@ -455,6 +455,14 @@ def get_type_relations(version):
         exit()
 
 
+def pp_basic_types(version):
+    btypes = get_basic_types(version)
+    for btype in sorted(btypes):
+        for ss in btypes[btype]:
+            print("%s\t%s\t%s" % (btype, ss[0], ss[1]))
+
+
 if __name__ == '__main__':
 
-    create_corelex_types_mapping()
+    #create_corelex_types_mapping()
+    pp_basic_types('3.1')
