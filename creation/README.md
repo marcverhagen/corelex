@@ -1,4 +1,4 @@
-## Creating CoreLex and CoreLex2
+## Creating CoreLex2
 
 Modules in this directory do the following:
 
@@ -22,7 +22,7 @@ Basically it assumes two directories
 /DATA/resources/lexicons/wordnet/WordNet-3.1/
 ```
 
-The WordNet-3.1 should have the WordNet distribution as downloaded from the WordNet website, in particula, it should have a `dict` subdirectory. Downloading WordNet 1.5 gives you a directory `wn15` and this directory should be immediately under the `WordNet-1.5` directory. Download WordNet 3.1 from http://wordnet.princeton.edu/ and WordNet 1.5 from https://wordnet.princeton.edu/download/old-versions.
+The WordNet-3.1 should have the WordNet distribution as downloaded from the WordNet website, in particular, it should have a `dict` subdirectory. Downloading WordNet 1.5 gives you a directory `wn15` and this directory should be immediately under the `WordNet-1.5` directory. Download WordNet 3.1 from http://wordnet.princeton.edu/ and WordNet 1.5 from https://wordnet.princeton.edu/download/old-versions.
 
 The `wordnet.py` moduel is used by the `corelex.py` module.
 
@@ -37,7 +37,7 @@ $ python3 corelex.py --create-cltype-files <version>
 
 For version you can use either `1.5` or `3.1`. When using version 1.5 you basically recreate something close to the old legacy CoreLex from 1998, with verbs added (but note that the verbs are still rather experimental). When using version 3.1 you create CoreLex 2.0.
 
-CoreLex 2.0 is different from CoreLex in that at the moment is it creates systematically polysemous types from WordNet, but it does not yet implement a many-to-one mapping from those types to CoreLex types.
+CoreLex 2.0 is different from CoreLex in that while it creates systematically polysemous types from WordNet, it does not yet implement a many-to-one mapping from those types to CoreLex types.
 
 See the docstring in the `corelex` module for more details.
 
