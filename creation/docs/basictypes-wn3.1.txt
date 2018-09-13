@@ -1,0 +1,254 @@
+<Synset 00001740 n entity.03.0>
+  <Synset 00001930 n physical_entity.03.0>
+    <Synset 00002452 n thing.03.0>
+      <Synset 04354303 n subject.06.0 content.06.0 depicted_object.06.0>
+      <Synset 09248053 n body_of_water.17.0 water.17.0>
+      <Synset 09335551 n inessential.17.0 nonessential.17.0>
+      <Synset 09390100 n necessity.17.0 essential.17.0 requirement.17.0 requisite.17.0 necessary.17.0>
+      <Synset 09408804 n part.17.0 piece.17.0>
+      <Synset 09430745 n reservoir.17.0 source.17.0>
+      <Synset 09488589 n unit.17.0 building_block.17.0>
+      <Synset 09492089 n variable.17.0>
+    <Synset 00002684 n object.03.0 physical_object.03.0>
+      <Synset 00003553 n whole.03.0 unit.03.0>
+      <Synset 00027365 n location.03.0>
+      <Synset 03013287 n charm.06.0 good_luck_charm.06.0>
+      <Synset 03154617 n curio.06.0 curiosity.06.0 oddity.06.0 oddment.06.1 peculiarity.06.0 rarity.06.0>
+      <Synset 03238126 n draw.06.1 lot.06.0>
+      <Synset 03343593 n film.06.0>
+      <Synset 03537260 n hoodoo.06.2>
+      <Synset 03600372 n je_ne_sais_quoi.06.0>
+      <Synset 03615483 n keepsake.06.0 souvenir.06.0 token.06.1 relic.06.1>
+      <Synset 03720260 n makeweight.06.1 filler.06.1>
+      <Synset 03898588 n part.06.0 portion.06.0>
+      <Synset 04018636 n property.06.0 prop.06.2>
+      <Synset 04255138 n snake.06.0>
+      <Synset 04352366 n stuff.06.0>
+      <Synset 04493701 n triviality.06.0 trivia.06.0 trifle.06.0 small_beer.06.0>
+      <Synset 07867030 n paring.13.0>
+      <Synset 09261049 n catch.17.0>
+      <Synset 09274595 n commemorative.17.0>
+      <Synset 09290396 n discard.17.0>
+      <Synset 09302364 n finding.17.0>
+      <Synset 09304683 n floater.17.0>
+      <Synset 09306099 n fomite.17.0 vehicle.17.0>
+      <Synset 09310874 n geological_formation.17.0 formation.17.0>
+      <Synset 09318244 n growth.17.0>
+      <Synset 09323811 n hail.17.0>
+      <Synset 09324937 n head.17.1>
+      <Synset 09331304 n ice.17.0>
+      <Synset 09357302 n land.17.0 dry_land.17.0 earth.17.1 ground.17.0 solid_ground.17.0 terra_firma.17.0>
+      <Synset 09358146 n land.17.1 ground.17.1 soil.17.0>
+      <Synset 09381447 n moon.17.2>
+      <Synset 09391121 n neighbor.17.0 neighbour.17.0>
+      <Synset 09430224 n remains.17.0>
+      <Synset 09432081 n ribbon.17.0 thread.17.0>
+      <Synset 09455894 n shiner.17.0>
+      <Synset 09491367 n vagabond.17.0>
+      <Synset 09497292 n wall.17.0>
+      <Synset 09500167 n web.17.0>
+    <Synset 00007347 n causal_agent.03.0 cause.03.0 causal_agency.03.0>
+      <Synset 00007846 n person.03.0 individual.03.0 someone.03.0 somebody.03.0 mortal.03.0 soul.03.0>
+      <Synset 09213796 n agent.17.0>
+      <Synset 09526814 n nature.18.0>
+      <Synset 09527009 n supernatural.18.0 occult.18.0>
+      <Synset 09527596 n theurgy.18.0>
+      <Synset 09527735 n first_cause.18.0 prime_mover.18.0 primum_mobile.18.0>
+      <Synset 09528047 n destiny.18.0 fate.18.0>
+      <Synset 09920164 n catalyst.18.0>
+      <Synset 10029580 n deus_ex_machina.18.0>
+      <Synset 10398111 n operator.18.0 manipulator.18.0>
+      <Synset 10480990 n power.18.0 force.18.0>
+      <Synset 10777586 n vital_principle.18.0 life_principle.18.0>
+      <Synset 11437675 n engine.19.0>
+      <Synset 14564166 n cause_of_death.26.0 killer.26.0>
+      <Synset 14564646 n danger.26.1>
+      <Synset 14802595 n agent.27.0>
+    <Synset 00021007 n matter.03.0>
+      <Synset 00019793 n substance.03.0>
+      <Synset 00020270 n substance.03.1>
+      <Synset 09451871 n sediment.17.0 deposit.17.0>
+      <Synset 14606205 n ylem.27.0>
+      <Synset 14606400 n dark_matter.27.0>
+      <Synset 14606715 n antimatter.27.0>
+      <Synset 14607753 n glop.27.0>
+      <Synset 14963583 n fluid.27.0>
+      <Synset 14980800 n sludge.27.0 slime.27.0 goo.27.0 goop.27.0 gook.27.0 guck.27.0 gunk.27.0 muck.27.0 ooze.27.0>
+      <Synset 15005742 n system.27.0>
+      <Synset 15029068 n residue.27.0>
+      <Synset 15071467 n solid.27.4>
+      <Synset 15072416 n solute.27.0>
+      <Synset 15134312 n emanation.27.0>
+      <Synset 15135523 n vegetable_matter.27.0>
+    <Synset 00029976 n process.03.0 physical_process.03.0>
+      <Synset 00034512 n phenomenon.03.0>
+      <Synset 13467145 n chelation.22.2>
+      <Synset 13477079 n dealignment.22.0>
+      <Synset 13479774 n decrease.22.0 decrement.22.0>
+      <Synset 13481502 n degeneration.22.0 devolution.22.0>
+      <Synset 13486023 n development.22.2 evolution.22.1>
+      <Synset 13492409 n economic_process.22.0>
+      <Synset 13495698 n encapsulation.22.0>
+      <Synset 13498665 n execution.22.0 instruction_execution.22.0>
+      <Synset 13515201 n human_process.22.0>
+      <Synset 13518338 n increase.22.0 increment.22.0 growth.22.2>
+      <Synset 13519131 n industrial_process.22.0>
+      <Synset 13524429 n irreversible_process.22.0>
+      <Synset 13525111 n iteration.22.0 looping.22.0>
+      <Synset 13525376 n iteration.22.1 loop.22.0>
+      <Synset 13540166 n natural_process.22.0 natural_action.22.0 action.22.0 activity.22.1>
+      <Synset 13546752 n operation.22.1 functioning.22.0 performance.22.0>
+      <Synset 13547313 n organic_process.22.0 biological_process.22.0>
+      <Synset 13557997 n photography.22.0>
+      <Synset 13562370 n processing.22.0>
+      <Synset 13572820 n reversible_process.22.0>
+      <Synset 13575546 n sensitization.22.0 sensitisation.22.0>
+      <Synset 13576649 n shaping.22.0 defining.22.0>
+      <Synset 13593527 n variation.22.0>
+    <Synset 14604577 n substance.27.0>
+  <Synset 00002137 n abstraction.03.0 abstract_entity.03.0>
+    <Synset 00023280 n psychological_feature.03.0>
+      <Synset 00023451 n cognition.03.0 knowledge.03.0 noesis.03.0>
+      <Synset 00023953 n motivation.03.0 motive.03.0 need.03.0>
+      <Synset 00029677 n event.03.0>
+    <Synset 00024444 n attribute.03.0>
+      <Synset 00024900 n state.03.0>
+      <Synset 00028005 n shape.03.0 form.03.0>
+      <Synset 00028468 n time.03.0>
+      <Synset 00028950 n space.03.0 infinite.03.0>
+      <Synset 04623223 n human_nature.07.0>
+      <Synset 04623416 n trait.07.0>
+      <Synset 04624273 n character.07.0>
+      <Synset 04624646 n thing.07.0>
+      <Synset 04624798 n common_denominator.07.0>
+      <Synset 04624919 n personality.07.0>
+      <Synset 04638046 n cheerfulness.07.0 cheer.07.0 sunniness.07.1 sunshine.07.0>
+      <Synset 04638655 n uncheerfulness.07.0>
+      <Synset 04699340 n ballast.07.0>
+      <Synset 04730562 n ethos.07.0>
+      <Synset 04730712 n eidos.07.0>
+      <Synset 04731092 n quality.07.0>
+      <Synset 04923519 n property.07.0>
+      <Synset 04928188 n inheritance.07.1 heritage.07.0>
+      <Synset 05141618 n depth.07.2>
+    <Synset 00031563 n group.03.0 grouping.03.0>
+      <Synset 02475618 n world.05.0 human_race.05.0 humanity.05.0 humankind.05.0 human_beings.05.0 humans.05.0 mankind.05.0 man.05.0>
+      <Synset 07955013 n arrangement.14.0>
+      <Synset 07955399 n straggle.14.0>
+      <Synset 07956688 n kingdom.14.0>
+      <Synset 07957410 n biological_group.14.0>
+      <Synset 07957969 n community.14.2 biotic_community.14.0>
+      <Synset 07958392 n people.14.0>
+      <Synset 07967506 n social_group.14.0>
+      <Synset 07968050 n collection.14.0 aggregation.14.0 accumulation.14.0 assemblage.14.1>
+      <Synset 07976007 n edition.14.0>
+      <Synset 07976273 n electron_shell.14.0>
+      <Synset 07983996 n ethnic_group.14.0 ethnos.14.0>
+      <Synset 07984596 n race.14.0>
+      <Synset 08006819 n association.14.1>
+      <Synset 08012591 n swarm.14.0 cloud.14.0>
+      <Synset 08017525 n subgroup.14.0>
+      <Synset 08169654 n sainthood.14.0>
+      <Synset 08177175 n citizenry.14.0 people.14.1>
+      <Synset 08195659 n population.14.1>
+      <Synset 08197108 n multitude.14.1 masses.14.0 mass.14.1 hoi_polloi.14.0 people.14.3 the_great_unwashed.14.0>
+      <Synset 08323595 n varna.14.0>
+      <Synset 08347441 n circuit.14.0>
+      <Synset 08452398 n system.14.0 scheme.14.0>
+      <Synset 08475515 n series.14.1>
+      <Synset 14608290 n actinoid.27.0 actinide.27.0 actinon.27.0>
+      <Synset 14648921 n rare_earth.27.0 rare-earth_element.27.0 lanthanoid.27.0 lanthanide.27.0 lanthanon.27.0>
+      <Synset 14928812 n halogen.27.0>
+    <Synset 00032220 n relation.03.0>
+      <Synset 00032912 n possession.03.0>
+      <Synset 00033122 n social_relation.03.0>
+      <Synset 05081943 n position.07.0 spatial_relation.07.0>
+      <Synset 13261412 n ownership.21.0>
+      <Synset 13802818 n causality.24.0>
+      <Synset 13802931 n relationship.24.0 human_relationship.24.0>
+      <Synset 13803376 n function.24.1>
+      <Synset 13804981 n association.24.0>
+      <Synset 13805250 n logical_relation.24.0>
+      <Synset 13805793 n mathematical_relation.24.0>
+      <Synset 13812924 n foundation.24.0>
+      <Synset 13813601 n connection.24.0 connexion.24.0 connectedness.24.0>
+      <Synset 13816438 n unconnectedness.24.0>
+      <Synset 13819354 n linguistic_relation.24.0>
+      <Synset 13831419 n part.24.0 portion.24.0 component_part.24.0 component.24.0 constituent.24.0>
+      <Synset 13833622 n affinity.24.3 kinship.24.2>
+      <Synset 13834819 n kinship.24.0 family_relationship.24.0 relationship.24.1>
+      <Synset 13837364 n magnitude_relation.24.0 quantitative_relation.24.0>
+      <Synset 13849418 n control.24.0>
+      <Synset 13859040 n business_relation.24.0>
+      <Synset 13863412 n reciprocality.24.0 reciprocity.24.0>
+      <Synset 13866409 n interrelation.24.0 interrelationship.24.0 interrelatedness.24.0>
+      <Synset 13866887 n temporal_relation.24.0>
+      <Synset 13876005 n comparison.24.0>
+      <Synset 13876846 n opposition.24.2 oppositeness.24.0>
+      <Synset 13881240 n change.24.0>
+    <Synset 00033319 n communication.03.0>
+      <Synset 01104341 n publication.04.2>
+      <Synset 06263820 n message.10.1>
+      <Synset 06293036 n contagion.10.0 infection.10.0>
+      <Synset 06293304 n language.10.0 linguistic_communication.10.0>
+      <Synset 06360590 n written_communication.10.0 written_language.10.0 black_and_white.10.0>
+      <Synset 06611268 n message.10.0 content.10.0 subject_matter.10.0 substance.10.0>
+      <Synset 06612774 n didacticism.10.0>
+      <Synset 06804229 n signal.10.0 signaling.10.0 sign.10.3>
+      <Synset 06806088 n sign.10.0>
+      <Synset 06810027 n indication.10.0 indicant.10.1>
+      <Synset 06886302 n visual_communication.10.0>
+      <Synset 06900776 n display.10.0>
+      <Synset 07080699 n expressive_style.10.0 style.10.0>
+      <Synset 07096217 n paralanguage.10.0 paralinguistic_communication.10.0>
+      <Synset 07123727 n auditory_communication.10.0>
+      <Synset 07125323 n voice.10.0 vocalization.10.0 vocalisation.10.0 vocalism.10.0 phonation.10.0 vox.10.0>
+      <Synset 07270459 n psychic_communication.10.0 psychical_communication.10.0 anomalous_communication.10.0>
+      <Synset 07292402 n voice.10.3>
+      <Synset 13424504 n document.21.0>
+    <Synset 00033914 n measure.03.0 quantity.03.0 amount.03.0>
+      <Synset 05098974 n probability.07.1 chance.07.0>
+      <Synset 05864101 n quantum.09.0>
+      <Synset 13434666 n value.21.0 economic_value.21.0>
+      <Synset 13597072 n fundamental_quantity.23.0 fundamental_measure.23.0>
+      <Synset 13597304 n definite_quantity.23.0>
+      <Synset 13597558 n indefinite_quantity.23.0>
+      <Synset 13598185 n relative_quantity.23.0>
+      <Synset 13598374 n system_of_measurement.23.0 metric.23.0>
+      <Synset 13601032 n cordage.23.0>
+      <Synset 13601136 n octane_number.23.0 octane_rating.23.0>
+      <Synset 13620790 n magnetization.23.0 magnetisation.23.0>
+      <Synset 13753670 n radical.23.0>
+      <Synset 13801244 n volume.23.0>
+      <Synset 13801456 n volume.23.1>
+      <Synset 13802392 n proof.23.0>
+      <Synset 15179734 n time_unit.28.0 unit_of_time.28.0>
+      <Synset 15205381 n point.28.0 point_in_time.28.0>
+      <Synset 15281726 n playing_period.28.0 period_of_play.28.0 play.28.0>
+      <Synset 15294470 n time_interval.28.0 interval.28.0>
+    <Synset 05818169 n otherworld.09.0>
+    <Synset 08016141 n set.14.2>
+      <Synset 06025625 n interval.09.0>
+      <Synset 06026202 n group.09.0 mathematical_group.09.0>
+      <Synset 08016560 n domain.14.1 domain_of_a_function.14.0>
+      <Synset 08016746 n image.14.0 range.14.1 range_of_a_function.14.0>
+      <Synset 08017086 n universal_set.14.0>
+      <Synset 08017323 n locus.14.0>
+      <Synset 08017651 n subset.14.0>
+      <Synset 08017786 n null_set.14.0>
+      <Synset 08017883 n Mandelbrot_set.14.0>
+      <Synset 08018127 n mathematical_space.14.0 topological_space.14.0>
+      <Synset 08021702 n field.14.0>
+      <Synset 08022396 n solution.14.0 root.14.0>
+      <Synset 08285242 n diagonal.14.1>
+      <Synset 13895852 n intersection.25.0>
+  <Synset 04431553 n thing.06.1>
+    <Synset 03009524 n change.06.1>
+    <Synset 03400581 n freshener.06.0>
+    <Synset 03543047 n horror.06.0>
+    <Synset 03604405 n jimdandy.06.0 jimhickey.06.0 crackerjack.06.0>
+    <Synset 03876139 n pacifier.06.1>
+    <Synset 04172872 n security_blanket.06.1>
+    <Synset 04327869 n stinker.06.1>
+    <Synset 04581520 n whacker.06.0 whopper.06.0>
+    
