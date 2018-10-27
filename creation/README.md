@@ -7,9 +7,14 @@ Modules in this directory do the following:
 - `browse.py` - allow command-line browsing of WordNet and CoreLex.
 
 
+#### Installation
+
+All that is needed is to copy the file `config.sample.py` to `config.py` and edit the variables in that file to match your local set up. At the moment there is only one variable name `WORDNET_DIR`, which points to the WordNet sources. See the section immediately below on how to set this variable.
+
+
 #### WordNet access
 
-The pre-requisite for creating CoreLex is to have a copy of the WordNet index and data files. The `wordnet.py` module assumes that WordNet 1.5 or 3.1 can be found using the directory template in `WORDNET_DIR` in `wordnet..py`:
+The pre-requisite for creating CoreLex is to have a copy of the WordNet index and data files. The `wordnet.py` module assumes that WordNet 1.5 or 3.1 can be found using the directory template in `WORDNET_DIR` in `wordnet.py`:
 
 ```
 /DATA/resources/lexicons/wordnet/WordNet-%s/

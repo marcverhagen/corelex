@@ -42,8 +42,8 @@ import textwrap
 
 import cltypes
 from utils import flatten, blue, green, bold, boldgreen, index_file, data_file
+from config import WORDNET_DIR
 
-WORDNET_DIR = '/DATA/resources/lexicons/wordnet/WordNet-%s/'
 
 NOUN = 'noun'
 VERB = 'verb'
