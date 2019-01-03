@@ -41,9 +41,10 @@ import copy
 import textwrap
 
 import cltypes
-from utils import flatten, blue, green, bold, boldgreen, index_file, data_file
+from utils import flatten, blue, green, bold, boldgreen, index_file, data_file, sense_file
 from config import WORDNET_DIR
 
+import pdb
 
 NOUN = 'noun'
 VERB = 'verb'
@@ -119,6 +120,12 @@ class WordNet(object):
         self._lemma_idx = { NOUN: {}, VERB: {} }
         self._synset_idx = { NOUN: {}, VERB: {} }
 
+        # PGA
+        # map sense_id to synset_offset 
+        # and (lemma synset_offset) to synset number
+        self._sense_idx = {}
+        self._synset_no_idx = {}
+
         # a list of all relations where a relation is a pair of a Synset
         # instance and a Pointer instance
         self._all_relations = None
@@ -126,11 +133,19 @@ class WordNet(object):
         # a list of all synsets that are basic types
         self._basic_types = { NOUN: [], VERB: [] }
 
+        #pdb.set_trace()
+
         wn_dir = WORDNET_DIR % wn_version
+        
         self._load_lemmas(NOUN, index_file(wn_dir, wn_version, NOUN))
         self._load_synsets(NOUN, data_file(wn_dir, wn_version, NOUN))
         self._load_lemmas(VERB, index_file(wn_dir, wn_version, VERB))
         self._load_synsets(VERB, data_file(wn_dir, wn_version, VERB))
+        
+        # PGA: sense_file maps sense_keys to sense_offsets
+        # sense_keys do not change across versions, while sense_offsets can.
+        self._load_senses(sense_file(wn_dir, wn_version))
+
         print("Loaded", self)
 
     def __str__(self):
@@ -156,11 +171,34 @@ class WordNet(object):
             synset = Synset(self, line.strip(), cat)
             self._synset_idx[cat][synset.id] = synset
 
+    # PGA
+    # Load wordnet's index.sense file, that contains mappings from immutable
+    # sense keys to synset offsets (which can change from version to version)
+    # line example: bank%1:14:00:: 08437235 2 20
+    def _load_senses(self, sense_file):
+        print('Loading index.sense file')
+        for line in open(sense_file):
+            sense_id, synset_offset, synset_no, corpus_count = line.split(" ")
+            synset_no = int(synset_no)
+            self._sense_idx[sense_id] = synset_offset
+            # Given a lemma and a synset offset, return the 
+            # number of that synset for the lemma.  Synsets are
+            # numbered by corpus frequency, so that the most
+            # frequent synset(s) appear with the lowest numbers.
+            lemma, rest = sense_id.split("%")
+            self._synset_no_idx[(lemma, synset_offset)] = synset_no
+
     def lemma_index(self):
         return self._lemma_idx
 
     def synset_index(self):
         return self._synset_idx
+
+    def sense_index(self):
+        return self._sense_idx
+
+    def synset_no_idx(self):
+        return self._synset_no_idx
 
     def basic_types(self, cat=NOUN):
         return self._basic_types[cat]
@@ -203,7 +241,7 @@ class WordNet(object):
         created lists in cltypes and adds information to the synsets mentioned
         in those lists. As a next step it descends down the hyponym tree for
         each marked synset and adds the basic types to sub synsets. If a synset
-        is assigned two nasic types bt1 and bt2 and bt1 is a subtype of bt2 then
+        is assigned two basic types bt1 and bt2 and bt1 is a subtype of bt2 then
         bt2 will not be included."""
         btypes = cltypes.get_basic_types(self.version)
         for btype in btypes:
@@ -397,6 +435,7 @@ class Synset(object):
         self._parse_pointers(fields)   # sets self.p_cnt and self.pointers dictionary
         self.fields = fields
         self.validate()
+
 
     def __str__(self):
         words = self.words_as_string()

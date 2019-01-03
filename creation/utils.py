@@ -19,6 +19,16 @@ def data_file(wn_dir, version, cat):
         fname = "data.%s" % cat
     return wn_dir + subdir + fname
 
+def sense_file(wn_dir, version):
+    """Return the relative path of the index.sense file in the WordNet distribution."""
+    if version == '1.5':
+        subdir = 'wn15/DICT/'
+        fname = "index.sense"
+    else:
+        subdir = 'DICT/'
+        fname = "index.sense"
+    return wn_dir + subdir + fname
+
 
 def flatten(some_list):
     result = []
