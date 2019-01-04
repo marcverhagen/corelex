@@ -70,6 +70,7 @@ from wordnet import WordNet
 import itertools
 import pdb
 import os
+import pickle
 
 # to use reload in python3: >>> from importlib import reload
 
@@ -108,7 +109,6 @@ class SemCorF():
     def corelex_semcor_sentno2file(self, category, extension='tab'):
         return "data/corelex-%s-semcor_sentno2file-%ss.%s" % (self.cl_version, category, extension)
 
-    
     def __init__(self, wn, semcor_dir, write_output_p = True):
 
         self.wordnet = wn
@@ -302,6 +302,98 @@ class SemCorF():
                 s2_gloss = self.wordnet.get_noun_synset(s2).gloss
                 fh.write("%s\t%s\t%s\t%s\t%s\n" % (lemma, joined_basic_types, s1, s2,  '|'.join([s1_gloss, s2_gloss])))
 
+
+
+class SemcorWordnetMappings(object):
+
+    """Class for creating a file with mappings from lemmas in Semcor and their
+    senses to wordnet synsets (that is, some elements from those synsets). These
+    mappings are intended to be used by the semcor browser (see the repository
+    at https://github.com/marcverhagen/semcor).
+
+    The content of the file looks as follows (note that the indentation in the
+    real file is one or two tabs):
+
+    friday
+        friday%1:28:00::
+            15189510
+            noun
+            tme
+            Friday.28.0 Fri.28.0
+            the sixth day of the week; the fifth working day
+
+    For each lemma ("Friday" in this case) it has a list of senses (just the one
+    here: "friday%1:28:00::") and for each sense it lists the synset identifier,
+    the category, the basic types, the synset description (list of lemmas with
+    sense numbers) and the synset gloss.
+
+    To generate this file do the following from a Python3 prompt:
+
+       >>> from semcor_cl import SemcorWordnetMappings
+       >>> m = SemcorWordnetMappings()
+       >>> m.print_mappings()
+
+    Results are written to data/corelex-3.1-semcor_lemma2synset.txt.
+
+    """
+
+    def __init__(self):
+        self.wn = WordNet('3.1')
+        self.wn.add_basic_types()
+        self.sc = SemCorF(self.wn, SEMCOR_DIR, write_output_p=False)
+        self.sc_lemmas = list(self.sc.dn_lemma2cf.keys())
+        self.lemma2sense = {}
+        self.mappings = {}
+        self._set_lemma_to_sense_idx()
+        self._set_mappings()
+
+    def _set_lemma_to_sense_idx(self):
+        self.lemma2sense = {}
+        for lemma in self.sc.wordnet._sense_idx:
+            short_form = lemma.split('%')[0]
+            self.lemma2sense.setdefault(short_form, []).append(lemma)
+
+    def _set_mappings(self):
+        self.mappings = {}
+        for lemma in self.sc_lemmas:
+            self.mappings[lemma] = []
+            for sense, ssid, ss in self._get_synsets(lemma):
+                self.mappings[lemma].append([sense, ssid, ss])
+
+    def _get_synsets(self, lemma):
+        synsets = []
+        for sense in self.lemma2sense[lemma]:
+            ssid = self.sc.wordnet._sense_idx.get(sense)
+            ss = self.sc.wordnet.get_noun_synset(ssid)
+            if ss is not None:
+                synsets.append([sense, ssid, ss])
+            else:
+                ss = self.sc.wordnet.get_verb_synset(ssid)
+                if ss is not None:
+                    synsets.append([sense, ssid, ss])
+        return synsets
+
+    def print_mappings(self):
+        """Save the mappings to data/corelex-3.1-semcor_lemma2synset.txt."""
+        fname = self.corelex_semcor_lemma2synset_file()
+        with open(fname, 'w') as fh:
+            for lemma in sorted(self.mappings):
+                fh.write(lemma + "\n")
+                for sense, ssid, ss in self.mappings[lemma]:
+                    btypes = ' '.join(sorted(ss.basic_types))
+                    fh.write("\t%s\n" % sense)
+                    fh.write("\t\t%s\n" % ssid)
+                    fh.write("\t\t%s\n" % ss.cat)
+                    fh.write("\t\t%s\n" % btypes)
+                    fh.write("\t\t%s\n" % ss.words_as_string())
+                    fh.write("\t\t%s\n" % ss.gloss)
+                fh.write("\n")
+
+    def corelex_semcor_lemma2synset_file(self):
+        # output file with mappings from senses to synset information and basic
+        # types if available
+        return "data/corelex-%s-semcor_lemma2synset.txt" % self.sc.cl_version
+
         
 
 
@@ -309,4 +401,3 @@ if __name__ == '__main__':
     print("Creating semcor files in %s" % SEMCOR_DIR)
     create_SemCorF()
     print("File created.")
-
