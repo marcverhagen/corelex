@@ -21,10 +21,12 @@ Loading WordNet requires a version (1.5 or 3.1) and a category (noun or verb):
 
 Searching for a lemma gives you a list of synset identifiers, which can be empty:
 
-   >>> wn.get_noun('door')
+   >>>d =  wn.get_noun('door')
+   >>>d.synsets
    ['02432728', '02435375', '03588923', '02433420', '02433281', '02433101']
 
-   >>> wn.get_noun('doorx')
+   >>> dx = wn.get_noun('doorx')
+   >>>d.synsets
    []
 
 Getting the synset object given a synset identifier:
@@ -469,6 +471,27 @@ class Synset(object):
         #return "%s %s" % (self.id, words)
         return "<Synset %s %s %s%s>" % (self.id, self.ss_type, words, basic_type)
 
+    # PGA methods for handling relatives of synsets
+    # A sister has the same parent
+    # ///
+    def parents(self):
+        return(self.hypernyms())
+
+    def children(self):
+        return(self.hyponyms())
+
+    def sisters(self):
+        my_sisters = []
+        for parent in self.parents():
+            for child in parent.children():
+                # do not include the source synset
+                if child != self:
+                    my_sisters.append(child)
+        return(my_sisters)
+
+    
+        
+
     @staticmethod
     def _validate_w_cnt(field):
         if len(field) != 2:
@@ -507,6 +530,14 @@ class Synset(object):
         self.words = []
         for i in range(self.w_cnt):
             self.words.append([fields.pop(0), fields.pop(0)])
+
+        # PGA: Store a flat list of the word strings themselves
+        self.l_words = [item[0] for item in self.words]
+        # word list excluding compound terms (containing "_")
+        self.simple_words = []
+        for item in self.l_words:
+            if not( "_" in item):
+                self.simple_words.append(item)
 
     def _parse_pointers(self, fields):
         self._validate_p_cnt(fields[0], self.line)
