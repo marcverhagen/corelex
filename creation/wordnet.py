@@ -8,26 +8,22 @@ downloaded from the WordNet website. Dowloading WordNet 1.5 gives you a
 directory wn14 and this directory should be immediately under the WordNet-1.5
 directory.
 
-Loading WordNet requires a version (1.5 or 3.1) and a category (noun or verb):
+Loading WordNet requires a version (1.5 or 3.1):
 
-   >>> wn = WordNet('1.5', NOUN)
+   >>> wn = WordNet('1.5')
    Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/NOUN.IDX ...
    Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/NOUN.DAT ...
-   Loaded 87511 noun lemmas and 60557 noun synsets
-   Loaded 0 verb lemmas and 0 verb synsets
+   Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/VERB.IDX ...
+   Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/VERB.DAT ...
 
    >>> print(wn)
-   <WordNet cat=noun lemma-count=87511>
+   <WordNet 1.5 nouns=87511 verbs=14727>
 
-Searching for a lemma gives you a list of synset identifiers, which can be empty:
+Searching for a lemma and getting its synsets gives you a list of synset identifiers:
 
-   >>>d =  wn.get_noun('door')
-   >>>d.synsets
+   >>> d =  wn.get_noun('door')
+   >>> d.synsets
    ['02432728', '02435375', '03588923', '02433420', '02433281', '02433101']
-
-   >>> dx = wn.get_noun('doorx')
-   >>>d.synsets
-   []
 
 Getting the synset object given a synset identifier:
 
@@ -46,19 +42,14 @@ import cltypes
 from utils import flatten, blue, green, bold, boldgreen, index_file, data_file, sense_file
 from config import WORDNET_DIR
 
-import pdb
 
 NOUN = 'noun'
 VERB = 'verb'
 
 
 POINTER_SYMBOL_LIST = [
-
     '!', '@', '@i', '~', '~i', '#m', '#s', '#p', '%m', '%s', '%p', '=', '+',
-    ';c', ';r', ';u', '-c', '-r', '-u',
-    '*', '>', '^', '$', '+',
-    '&', '<', '\\', '='
-]
+    ';c', ';r', ';u', '-c', '-r', '-u', '*', '>', '^', '$', '+', '&', '<', '\\', '=' ]
 
 
 POINTER_SYMBOLS = {
@@ -135,8 +126,6 @@ class WordNet(object):
         # a list of all synsets that are basic types
         self._basic_types = { NOUN: [], VERB: [] }
 
-        #pdb.set_trace()
-
         wn_dir = WORDNET_DIR % wn_version
         
         self._load_lemmas(NOUN, index_file(wn_dir, wn_version, NOUN))
@@ -148,11 +137,10 @@ class WordNet(object):
         # sense_keys do not change across versions, while sense_offsets can.
         self._load_senses(sense_file(wn_dir, wn_version))
 
-        print("Loaded", self)
 
     def __str__(self):
-        return "<WordNet nouns=%d verbs=%d>" \
-            % (len(self._lemma_idx[NOUN]), len(self._lemma_idx[VERB]))
+        return "<WordNet %s nouns=%d verbs=%d>" \
+            % (self.version, len(self._lemma_idx[NOUN]), len(self._lemma_idx[VERB]))
 
     def _load_lemmas(self, cat, index_file):
         print('Loading %s ...' % index_file)
@@ -178,6 +166,9 @@ class WordNet(object):
     # sense keys to synset offsets (which can change from version to version)
     # line example: bank%1:14:00:: 08437235 2 20
     def _load_senses(self, sense_file):
+        # there is no index.sense file for version 1.5, so skip it
+        if self.version == '1.5':
+            return
         print('Loading index.sense file')
         for line in open(sense_file):
             sense_id, synset_offset, synset_no, corpus_count = line.split(" ")
