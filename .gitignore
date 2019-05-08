@@ -1,6 +1,7 @@
 *~
 *pyc
 .DS_Store
+.idea
 corelex.tab
 corelex.txt
 tmp.*
@@ -8,3 +9,6 @@ __pycache__
 legacy/data/*sql
 browser/connection.php
 config.py
+config.sh
+creation/docs/basic-types-trees-*.jpg
+creation/docs/basic-types-1.5-*.tiff

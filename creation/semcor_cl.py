@@ -20,15 +20,15 @@ WORDNET_DIR = '<your-full-path-here>/WordNet-%s/'
 
 python 3.x
 
-To run:
+To run and to create all the files described below:
 
-To create all the files described below:
 From command line, run
-$python3 semcor_cl.py
+
+$ python3 semcor_cl.py
 
 or within python, run 
 
->semcor_cl.create_SemCorF() 
+>>> semcor_cl.create_SemCorF()
 
 Output:
 
@@ -88,8 +88,7 @@ def set2string(myset):
 # data to files. All the info needed to generate the output files
 # is stored in the object.
 def create_SemCorF(write_output_p = True):
-    wn = WordNet('3.1')
-    wn.add_basic_types()
+    wn = WordNet('3.1', add_basic_types=True)
     sc = SemCorF(wn, SEMCOR_DIR, write_output_p)
     return(sc)
     
@@ -376,20 +375,18 @@ class SemCorF():
 
 
 def create_parallel(write_output_p = False):
-    wn = WordNet('3.1')
-    wn.add_basic_types()
+    wn = WordNet('3.1', add_basic_types=True)
     para = Parallel(wn)
     return(para)
 
 # from importlib import reload
 # import wordnet
-# wn = wordnet.WordNet('3.1')
-# wn.add_basic_types()
+# wn = wordnet.WordNet('3.1', add_basic_types=True)
 # import semcor_cl
 # semcor_cl.run_para(wn)
 def run_para(wn):
     p = Parallel(wn)
-    #p.top_pair_parallels(10, 10000)
+    # p.top_pair_parallels(10, 10000)
     p.filter_pair_file()
 
 
@@ -570,8 +567,7 @@ class SemcorWordnetMappings(object):
     """
 
     def __init__(self):
-        self.wn = WordNet('3.1')
-        self.wn.add_basic_types()
+        self.wn = WordNet('3.1', add_basic_types=True)
         self.sc = SemCorF(self.wn, SEMCOR_DIR, write_output_p=False)
         self.sc_lemmas = list(self.sc.dn_lemma2cf.keys())
         self.lemma2sense = {}

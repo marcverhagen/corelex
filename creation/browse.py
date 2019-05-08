@@ -176,5 +176,5 @@ if __name__ == '__main__':
 
     wn = WordNet(wn_version, category)
     if expand(category) == NOUN:
-        wn.add_nominal_basic_types()
+        wn._add_nominal_basic_types()
     UserLoop(wn, category)

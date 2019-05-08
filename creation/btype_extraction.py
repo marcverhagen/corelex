@@ -14,8 +14,7 @@ def load_lemmas():
 
 
 def load_wordnet():
-    wn = wordnet.WordNet('3.1')
-    wn.add_basic_types()
+    wn = wordnet.WordNet('3.1', add_basic_types=True)
     print('Loaded', wn)
     return wn
 

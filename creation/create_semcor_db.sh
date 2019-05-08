@@ -25,7 +25,7 @@ source ./config.sh
 start_time="$(date -u +%s)"
 
 echo "Running: python semcor_parse.py extract"
-python semcor_parse.py extract
+python3 semcor_parse.py extract
 
 end_time="$(date -u +%s)"
 elapsed="$(($end_time-$start_time))"
@@ -39,7 +39,7 @@ elapsed="$(($end_time-$start_time))"
 echo "Time elapsed so far: $elapsed seconds"
 
 echo "Running: python semcor_parse.py merge"
-python semcor_parse.py merge
+python3 semcor_parse.py merge
 
 end_time="$(date -u +%s)"
 elapsed="$(($end_time-$start_time))"
