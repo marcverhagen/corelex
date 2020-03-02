@@ -1,3 +1,27 @@
+"""btype_extraction.py
+
+Usage:
+
+$ python3 btype-extraction.py
+
+This runs a simple baseline basic type algorith based on using the most likely
+Wordnet synset.
+
+This requires a file named semcor-types.tab which should live in semcor/code,
+where semcor is the code from https://github.com/marcverhagen/semcor which is
+assumed to have been cloned at the same level as the corelex code. 
+
+See semcor/code/semocr.py on how to create semcor-types.tab, basically your run
+
+$  python3 semcor.py --export-nouns semcor-types.tab
+
+If you decide to create a file with a different name or clone the semcor
+reporitory in another location you may do so, but you should update the
+SEMCOR_TYPES variable below.
+
+"""
+
+
 from functools import reduce
 import wordnet
 
