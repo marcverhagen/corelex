@@ -20,15 +20,15 @@ WORDNET_DIR = '<your-full-path-here>/WordNet-%s/'
 
 python 3.x
 
-To run:
+To run and to create all the files described below:
 
-To create all the files described below:
 From command line, run
-$python3 semcor_cl.py
+
+$ python3 semcor_cl.py
 
 or within python, run 
 
->semcor_cl.create_SemCorF() 
+>>> semcor_cl.create_SemCorF()
 
 Output:
 
@@ -62,14 +62,19 @@ format: sense_key
 example line: variety%1:09:00::
 NOTE: It is unclear why so many sense keys have no mapping.  Needs to be investigated further.
 
+To run without producing files:
+sc = semcor_cl.create_SemCorF(False)
+
 """
 
 from collections import defaultdict
 from config import SEMCOR_DIR
 from wordnet import WordNet
+from nltk.corpus import semcor
 import itertools
 import pdb
 import os
+import pickle
 
 # to use reload in python3: >>> from importlib import reload
 
@@ -83,8 +88,7 @@ def set2string(myset):
 # data to files. All the info needed to generate the output files
 # is stored in the object.
 def create_SemCorF(write_output_p = True):
-    wn = WordNet('3.1')
-    wn.add_basic_types()
+    wn = WordNet('3.1', add_basic_types=True)
     sc = SemCorF(wn, SEMCOR_DIR, write_output_p)
     return(sc)
     
@@ -108,7 +112,6 @@ class SemCorF():
     def corelex_semcor_sentno2file(self, category, extension='tab'):
         return "data/corelex-%s-semcor_sentno2file-%ss.%s" % (self.cl_version, category, extension)
 
-    
     def __init__(self, wn, semcor_dir, write_output_p = True):
 
         self.wordnet = wn
@@ -138,6 +141,25 @@ class SemCorF():
         # map a sentence number to the document it occurs in
         self.sent_no2doc = {}
 
+        # map a lemma and synset offset (lemma, sid tuple) 
+        # to the set of sentence numbers it
+        # occurs in. Use a set in case the same lemma/sid occurs
+        # multiple times in the same sentence.  
+        # Sentence numbers are ordered from 0 and continue through
+        # the brown1 and brown2 semcor files (taken in lexicographic order.)
+        self.dn_lemma_sid2all_sent_nos = defaultdict(set)
+
+        # map from lemma to the set of (lemma, sid) tuples found in the corpus
+        self.dn_lemma2all_lemma_sid = defaultdict(set)
+
+        # keep a set of all sids (synset offsets) found in the corpus for a 
+        # given lemma
+        self.dn_lemma2all_sids = defaultdict(set)
+
+        # mapping from lemma to all pairs of sids for the lemma the cooccur in
+        # at least one document.
+        self.dn_lemma2spair = defaultdict(set)
+
         # track any missing sense keys that appear in semcor but not in
         # wordnet index.sense file.
         self.missing_keys = set()
@@ -156,6 +178,29 @@ class SemCorF():
             with open(filename, 'w') as fh:
                 for key in self.missing_keys:
                     fh.write("%s\n" % key)
+
+    # return the nth sentence from the semcor corpus
+    def get_semcor_sentence(self, sent_no):
+        sent = " ".join(semcor.sents()[0])
+        return(sent)
+    
+    def get_lemma_sid_info(self, lemma, sid):
+        bt = set2string(self.wordnet.get_noun_synset(sid).basic_types)
+        sents = list(self.dn_lemma_sid2all_sent_nos[(lemma, sid)])
+        return(bt, sents)
+        
+    def get_lemma_sid_pair_info(self, lemma, sid1, sid2):
+        (bt1, sents1) = self.get_lemma_sid_info(lemma, sid1)
+        (bt2, sents2) = self.get_lemma_sid_info(lemma, sid2)
+        return(bt1, bt2, sents1, sents2)
+
+    def get_spair_info(self, spair):
+        (lemma, sid1, sid2) = spair
+        (bt1, bt2, sents1, sents2) = self.get_lemma_sid_pair_info(lemma, sid1, sid2)
+        gloss1 = self.wordnet.get_noun_synset(sid1).gloss
+        gloss2 = self.wordnet.get_noun_synset(sid2).gloss
+        return(lemma, bt1, bt2, gloss1, gloss2, self.get_semcor_sentence(sents1[0]), self.get_semcor_sentence(sents2[0]) ) 
+
             
     def _load_semcor(self, semcor_dir):
     # As of December 2018, semcor directory contains two files with 
@@ -168,6 +213,8 @@ class SemCorF():
         # we will start numbering sentences by 0 and continue the numbering
         # across the brown1 and brown2 corpora.
         # We will look for a <sent> tag in the xml file to know when to increment sent_no
+
+        ## /// NOTE: We will need to change the start number to 1, rather than 0.  TODO
         sent_no = -1
 
         # file to capture pairs along with specific documents and sentence numbers
@@ -190,9 +237,10 @@ class SemCorF():
                 # sids that appear for the lemma
                 dn_lemma2sids = defaultdict(set)
 
-                # keep a doc specific list of sentence numbers in which a
-                # synset occurs
-                dn_sid2sent_nos = defaultdict(list)
+                # keep a doc specific set of sentence numbers in which a
+                # synset occurs.  Use a set in case the same lemma/sid occurs
+                # multiple times in the same sentence.
+                dn_sid2sent_nos = defaultdict(set)
 
                 semcor_path = os.path.join(path, semcor_file)
                 for line in open(semcor_path):
@@ -231,8 +279,27 @@ class SemCorF():
                                 # assuming the sense id has a mapping to a synset offset
                                 # in wordnet's index.sense file.
                                 dn_lemma2sids[lemma].add(sid)
+
+                                # corpus-wide mapping of lemma to (lemma, sid) tuples
+                                self.dn_lemma2all_lemma_sid = defaultdict(set)
+
+                                # update the corpus-wide set of sids per lemma 
+                                self.dn_lemma2all_sids[lemma].add(sid)
+
                                 # keep track of all the sentences this synset occurs in
-                                dn_sid2sent_nos[sid].append(sent_no)
+                                dn_sid2sent_nos[sid].add(sent_no)
+
+                                # update the corpus-wide set of sentences for the 
+                                # lemma/synset combination
+                                lemma_sid = (lemma, sid)
+
+                                ### BUG? Check the lemma_sid. Is the sid a number or
+                                ### string.  Is the sent_no correct. ///
+                                self.dn_lemma_sid2all_sent_nos[lemma_sid].add(sent_no)
+                                
+                                # update the corpus-wide set of lemma-sid tuples for 
+                                # each lemma
+
                                 #pdb.set_trace()
 
                             else:
@@ -258,6 +325,10 @@ class SemCorF():
                         sid_tuple = tuple([lemma] + sid_pair)
                         # save the tuple and increment count (across docs)
                         self.dn_spair2df[sid_tuple] += 1
+
+                        # corpus-wide mapping of lemma to sid pairs
+                        # pairs that cooccur in at least one document
+                        self.dn_lemma2spair[lemma].add(sid_tuple)
 
                         sid1 = sid_pair[0]
                         sid2 = sid_pair[1]
@@ -302,11 +373,257 @@ class SemCorF():
                 s2_gloss = self.wordnet.get_noun_synset(s2).gloss
                 fh.write("%s\t%s\t%s\t%s\t%s\n" % (lemma, joined_basic_types, s1, s2,  '|'.join([s1_gloss, s2_gloss])))
 
-        
+
+def create_parallel(write_output_p = False):
+    wn = WordNet('3.1', add_basic_types=True)
+    para = Parallel(wn)
+    return(para)
+
+# from importlib import reload
+# import wordnet
+# wn = wordnet.WordNet('3.1', add_basic_types=True)
+# import semcor_cl
+# semcor_cl.run_para(wn)
+def run_para(wn):
+    p = Parallel(wn)
+    # p.top_pair_parallels(10, 10000)
+    p.filter_pair_file()
+
+
+class Parallel():
+
+    def __init__(self, wn):
+        self.wordnet = wn
+        # This file needs to be created from corelex-3.1-semcor_pairs-nouns.tab:
+        # cat corelex-3.1-semcor_pairs-nouns.tab | cut -f2 | sunr > corelex-3.1-semcor_pairs-nouns.f2.sunr
+        # alias sunr='sort | uniq -c | sort -nr | sed -e '\''s/^ *\([0-9]*\) /\1  /'\'''
+        self.sorted_pairs_file = "data/corelex-3.1-semcor_pairs-nouns.f2.sunr"
+        # We'll use a threshold of frequency of pair type >= 10 for generating
+        # the parallels data in top_pair_parallels()
+        self.para_file = "data/corelex-3.1-semcor-gte_10.para"
+        # pair_file generated using the semcor_cl class
+        # use the sorted file to get output in alphabetical order by source lemma
+        self.semcor_pairs_nouns_file = "data/corelex-3.1-semcor_pairs-nouns.tab.sorted"
+        self.filtered_pair_file = "data/corelex-3.1-semcor_pairs-nouns.filt"
+
+    # /// add a class to hold the sister synsets and its parallel words/synsets
+    #class sister_pair(self):
+        #self.synset
+
+    def word2bt_synsets(self, word, basic_type):
+        word_synset_ids = []
+        word_obj = self.wordnet.get_noun(word)
+        # It is possible to get a word that is referenced in a synset which does
+        # not have its own wordnet entry (e.g. "Anglo-Saxon").  So we have to
+        # test for that situation here by seeing if the resulting word object is null.
+        if word_obj == None:
+            print("[semcor_cl.py]word2bt_synsets: word not in wordnet: %s\n" % word)
+            return([])
+        else:
+            word_synset_ids = self.wordnet.get_noun(word).synsets
+
+        # convert ids list to synset list
+        word_synsets = [self.wordnet.get_noun_synset(sid) for sid in word_synset_ids]
+        # create list of synsets which have the basic_type requested
+        wbt_synsets = []
+        #pdb.set_trace()
+        for synset in word_synsets:
+            if basic_type in synset.basic_types:
+                wbt_synsets.append(synset)
+        return(wbt_synsets)
+
+    # Given a lemma and two synsets for the lemma
+    # Find sister synsets of synset 1 that have lemmas with synsets which also
+    # match the basic_type of synset 2 
+    # p.find_parallels("american", "06960241", "09758057", "com", "hum")
+    # p.find_parallels("addition", "00364614", "02682269", "act", "pho")
+    # p.find_parallels("allotment",  "01085569", "13310490","act", "pos" )
+    # p.find_parallels("air", "08670889", "14865437", "loc", "sub")
+    def find_parallels(self, lemma, sid1, sid2, basic_type_1, basic_type_2, verbose_p = False):
+        ss1 = self.wordnet.get_noun_synset(sid1)
+        sister_lemmas = []
+        parallels = []
+        no_parallels = []
+        # extract the (simple word) lemmas for sister synsets
+        for sister_synset in ss1.sisters():
+            l_simple_words = sister_synset.simple_words
+            if l_simple_words != []:
+                sister_lemmas.extend(l_simple_words)
+
+        #pdb.set_trace()
+        for word in sister_lemmas:
+            sister_word_synsets = self.word2bt_synsets(word, basic_type_2)
+            # track any word that has no parallel synset (with desired basic_type)
+            if sister_word_synsets == []:
+                no_parallels.append(word)
+                if verbose_p:
+                    print("no parallel for: %s\n" % word)
+            for sister_word_synset in sister_word_synsets:
+                parallels.append((word, sister_word_synset))
+                if verbose_p:
+                    print("%s\t%s\t%s\n" % (word, sister_word_synset.id, sister_word_synset.gloss))
+
+        return(parallels, no_parallels)
+
+    def top_pair_parallels(self, min_count = 10, limit = 100000000):
+        # any pair of unequal basic types with semcor frequency >= min_count
+        d_top_pairs = {}
+        for line in open(self.sorted_pairs_file):
+            (count, pair) = line.split("\t")
+            bt1, bt2 = pair.split(" ")
+            count = int(count)
+            if count >= min_count:
+                # index by tuple of basic types
+                d_top_pairs[(bt1, bt2)] = count
+            else:
+                continue
+
+        # open our output file for parallels
+        with open(self.para_file, 'w') as parallels_str:
+            # iterate through the sorted file of pairs found in semcor
+            # watch for limit (to process a subset of the file)
+            line_number = 0
+            for line in open(self.semcor_pairs_nouns_file):
+                line_number += 1
+                if line_number > limit:
+                    print("Reached line limit: %i\n" % line_number)
+                    return()
+                # conditions: 
+                # 1. Pair must be high frequency (ie. in the d_top_pairs dict
+                # 2. Pair must be composed of two different basic types
+                # (Note that many pairs have the same basic type. We ignore these
+                # for now.)
+                (lemma1, bt_pair, sid1, sid2, glosses) = line.split("\t")
+                (basic_type_1, basic_type_2) = bt_pair.split(" ")
+                if basic_type_1 == basic_type_2:
+                    continue
+                (parallels, no_parallels) = self.find_parallels(lemma1, sid1, sid2, basic_type_1, basic_type_2)
+                parallels_str.write("%s\t%s\t%s %s\t%s\n" % (lemma1, bt_pair, sid1, sid2, glosses))
+                for parallel in parallels:
+                    (word, sister_word_synset) = parallel
+                    parallels_str.write("\t%s\t%s\t%s\n" % (word, sister_word_synset.id, sister_word_synset.gloss))
+                #parallels_str.write("\tNo match: %s\n\n" % no_parallels)
+
+        print("Processed line number: %i\n" % line_number)
+
+    # Take a pair file sorted by the pair field (column 2)
+    # Remove any lines for which the members of the pair are equal.
+    # This gives us all examples of a particular pair type.
+    def filter_pair_file(self, min_count = 10):
+        d_pairs = {}
+        # create dict with counts for each pair of basic types
+        for line in open(self.sorted_pairs_file):
+            line = line.strip()
+            (count, pair) = line.split("\t")
+            count = int(count)
+            d_pairs[pair] = count
+
+        #pdb.set_trace()
+        with open(self.filtered_pair_file, 'w') as filtered_str:
+            for line in open(self.semcor_pairs_nouns_file):
+                # conditions: 
+
+                # 2. Pair must be composed of two different basic types
+                # (Note that many pairs have the same basic type. We ignore these
+                # for now.)
+                (lemma, bt_pair, sid1, sid2, glosses) = line.split("\t")
+                (basic_type_1, basic_type_2) = bt_pair.split(" ")
+                count = d_pairs[bt_pair]
+                if (basic_type_1 != basic_type_2) and (count >= min_count):
+                    filtered_str.write("%i\t%s\t%s\t%s %s\t%s\n\n" % (count, bt_pair, lemma, sid1, sid2, glosses))
+
+
+class SemcorWordnetMappings(object):
+
+    """Class for creating a file with mappings from lemmas in Semcor and their
+    senses to wordnet synsets (that is, some elements from those synsets). These
+    mappings are intended to be used by the semcor browser (see the repository
+    at https://github.com/marcverhagen/semcor).
+
+    The content of the file looks as follows (note that the indentation in the
+    real file is one or two tabs):
+
+    friday
+        friday%1:28:00::
+            15189510
+            noun
+            tme
+            Friday.28.0 Fri.28.0
+            the sixth day of the week; the fifth working day
+
+    For each lemma ("Friday" in this case) it has a list of senses (just the one
+    here: "friday%1:28:00::") and for each sense it lists the synset identifier,
+    the category, the basic types, the synset description (list of lemmas with
+    sense numbers) and the synset gloss.
+
+    To generate this file do the following from a Python3 prompt:
+
+       >>> from semcor_cl import SemcorWordnetMappings
+       >>> m = SemcorWordnetMappings()
+       >>> m.print_mappings()
+
+    Results are written to data/corelex-3.1-semcor_lemma2synset.txt.
+
+    """
+
+    def __init__(self):
+        self.wn = WordNet('3.1', add_basic_types=True)
+        self.sc = SemCorF(self.wn, SEMCOR_DIR, write_output_p=False)
+        self.sc_lemmas = list(self.sc.dn_lemma2cf.keys())
+        self.lemma2sense = {}
+        self.mappings = {}
+        self._set_lemma_to_sense_idx()
+        self._set_mappings()
+
+    def _set_lemma_to_sense_idx(self):
+        self.lemma2sense = {}
+        for lemma in self.sc.wordnet._sense_idx:
+            short_form = lemma.split('%')[0]
+            self.lemma2sense.setdefault(short_form, []).append(lemma)
+
+    def _set_mappings(self):
+        self.mappings = {}
+        for lemma in self.sc_lemmas:
+            self.mappings[lemma] = []
+            for sense, ssid, ss in self._get_synsets(lemma):
+                self.mappings[lemma].append([sense, ssid, ss])
+
+    def _get_synsets(self, lemma):
+        synsets = []
+        for sense in self.lemma2sense[lemma]:
+            ssid = self.sc.wordnet._sense_idx.get(sense)
+            ss = self.sc.wordnet.get_noun_synset(ssid)
+            if ss is not None:
+                synsets.append([sense, ssid, ss])
+            else:
+                ss = self.sc.wordnet.get_verb_synset(ssid)
+                if ss is not None:
+                    synsets.append([sense, ssid, ss])
+        return synsets
+
+    def print_mappings(self):
+        """Save the mappings to data/corelex-3.1-semcor_lemma2synset.txt."""
+        fname = self.corelex_semcor_lemma2synset_file()
+        with open(fname, 'w') as fh:
+            for lemma in sorted(self.mappings):
+                fh.write(lemma + "\n")
+                for sense, ssid, ss in self.mappings[lemma]:
+                    btypes = ' '.join(sorted(ss.basic_types))
+                    fh.write("\t%s\n" % sense)
+                    fh.write("\t\t%s\n" % ssid)
+                    fh.write("\t\t%s\n" % ss.cat)
+                    fh.write("\t\t%s\n" % btypes)
+                    fh.write("\t\t%s\n" % ss.words_as_string())
+                    fh.write("\t\t%s\n" % ss.gloss)
+                fh.write("\n")
+
+    def corelex_semcor_lemma2synset_file(self):
+        # output file with mappings from senses to synset information and basic
+        # types if available
+        return "data/corelex-%s-semcor_lemma2synset.txt" % self.sc.cl_version
 
 
 if __name__ == '__main__':
     print("Creating semcor files in %s" % SEMCOR_DIR)
     create_SemCorF()
     print("File created.")
-

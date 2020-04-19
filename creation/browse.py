@@ -1,6 +1,6 @@
 """
 
-Command line browser for WordNet, including added CoreLex basic types for nouns.
+Command line browser for WordNet, includes added CoreLex basic types for nouns.
 
 Usage:
 
@@ -24,24 +24,24 @@ if sys.version_info.major < 3:
 class UserLoop(object):
 
     """For user interaction via the command line. The way this works is that the
-    system will always be in a particular, which on initialization is the main
-    mode. Each mode is associated with a method and that method does three
+    system will always be in a particular mode, which on initialization is the
+    main mode. Each mode is associated with a method and that method does three
     things:
 
     1. Perform some action. For example, in synset mode the synset is printed to
        the terminal. This action can be empty.
 
     2. Print choices for next steps to the terminal. This tells the user what
-       the next action in the user loop can be. The last part here is to
-       sollicit the user's choice.
+       the next action in the user loop can be. This sollicits user input. If
+       the next mode is the main mode than no choices need to be given since the
+       main mode starts with printing choices.
 
     3. Determine what the next mode is given the user response. This includes
-       changing th emode if needed.
+       changing the mode if needed.
 
     """
-    
+
     MAIN_MODE = 'MAIN_MODE'
-    SEARCH_MODE = 'SEARCH_MODE'
     WORD_MODE = 'WORD_MODE'
     SYNSET_MODE = 'SYNSET_MODE'
     STATS_MODE = 'STATS_MODE'
@@ -67,78 +67,51 @@ class UserLoop(object):
         while True:
             print()
             if self.mode == UserLoop.MAIN_MODE:
-                self.main_mode()
-            elif self.mode == UserLoop.SEARCH_MODE:
-                self.search_mode()
+                self._main_mode()
             elif self.mode == UserLoop.WORD_MODE:
-                self.word_mode()
+                self._word_mode()
             elif self.mode == UserLoop.SYNSET_MODE:
-                self.synset_mode()
+                self._synset_mode()
             elif self.mode == UserLoop.STATS_MODE:
-                self.stats_mode()
+                self._stats_mode()
     
-    def main_mode(self):
-        self.choices = [('s', 'search ' + self.category), ('a', 'show statistics'), ('q', 'quit') ]
-        self.print_choices()
+    def _main_mode(self):
+        self._action_print_choices(search(self.category), stats(), end())
         choice = input(UserLoop.PROMPT)
         if choice == 'q':
             exit()
-        elif choice == 's':
-            self.mode = UserLoop.SEARCH_MODE
+        elif choice.startswith('s '):
+            self._action_search(choice)
         elif choice == 'a':
             self.mode = UserLoop.STATS_MODE
         else:
             print("Not a valid choice")
 
-    def search_mode(self):
-        print('\nEnter a %s to search WordNet' % self.category)
-        print('Enter return to go to the home screen')
-        choice = input(UserLoop.PROMPT)
-        if choice == '':
-            self.mode = UserLoop.MAIN_MODE
-        else:
-            choice = choice.replace(' ', '_')
-            if choice in self.lemma_idx[self.category]:
-                self.search_term = choice
-                self.mode = UserLoop.WORD_MODE
-            else:
-                print("Not in WordNet")
-                
-    def word_mode(self):
-        #synsets_offsets = self.lemma_idx[self.category].get(self.search_term)
-        word = self.lemma_idx[self.category].get(self.search_term)
-        #self.synsets = [self.wn.get_synset(self.category, off) for off in synsets_offsets]
-        self.synsets = [self.wn.get_synset(self.category, off) for off in word.synsets]
-        self.mapping = list(enumerate(self.synsets))
-        self.mapping_idx = dict(self.mapping)
-        self.choices = [('s', 'search'), ('h', 'home'), ('q', 'quit') ]
-        print("%s\n" % bold(self.search_term))
-        for count, synset in self.mapping:
-            print("[%d]  %s" % (count, synset.as_formatted_string()))
-        self.print_choices()
+    def _word_mode(self):
+        self._action_print_synsets()
+        self._action_print_choices(search(self.category), home(), end())
         choice = input(UserLoop.PROMPT)
         if choice == 'q':
             exit()
         if choice == 'h':
             self.mode = UserLoop.MAIN_MODE
-        elif choice == 's':
-            self.mode = UserLoop.SEARCH_MODE
+        elif choice.startswith('s '):
+            self._action_search(choice)
         elif choice.isdigit() and int(choice) in [m[0] for m in self.mapping]:
-            # displaying a synset
+            # use the choice to save the synset before changing the mode
             self.synset = self.mapping_idx[int(choice)]
             self.mode = UserLoop.SYNSET_MODE
         else:
             print("Not a valid choice")
 
-    def synset_mode(self):
+    def _synset_mode(self):
         self.synset.pp()
-        self.choices = [('b', 'back to the word'), ('s', 'search'), ('h', 'home'), ('q', 'quit') ]
-        self.print_choices()
+        self._action_print_choices(back(), search(self.category), home(), end())
         choice = input(UserLoop.PROMPT)
         if choice == 'b':
             self.mode = UserLoop.WORD_MODE
-        elif choice == 's':
-            self.mode = UserLoop.SEARCH_MODE
+        elif choice.startswith('s '):
+            self._action_search(choice)
         elif choice == 'h':
             self.mode = UserLoop.MAIN_MODE
         elif choice == 'q':
@@ -146,25 +119,60 @@ class UserLoop(object):
         elif choice.isdigit() and int(choice) in self.synset.mappings:
             self.synset = self.synset.mappings[int(choice)]
 
-    def stats_mode(self):
+    def _stats_mode(self):
+        self._action_print_statistics()
+        self.mode = UserLoop.MAIN_MODE
+
+    def _action_search(self, choice):
+        search_term = choice[2:].strip().replace(' ', '_')
+        if search_term in self.lemma_idx[self.category]:
+            self.search_term = search_term
+            self.mode = UserLoop.WORD_MODE
+        else:
+            print("Not in WordNet")
+
+    def _action_print_synsets(self):
+        word = self.lemma_idx[self.category].get(self.search_term)
+        self.synsets = [self.wn.get_synset(self.category, off) for off in word.synsets]
+        self.mapping = list(enumerate(self.synsets))
+        self.mapping_idx = dict(self.mapping)
+        print("%s\n" % bold(self.search_term))
+        for count, synset in self.mapping:
+            print("[%d]  %s" % (count, synset.as_formatted_string()))
+
+    def _action_print_statistics(self):
         print('Synsets without hypernyms:\n')
         count = 0
         for synset in self.synset_idx[self.category].values():
             if not synset.hypernyms():
                 count += 1
                 print(synset)
-                #synset.pp_short()
         print("\nNumber of synsets without hypernym: %d\n" % count)
         # printing the entity tree
         if self.category == NOUN and self.wn.version == '3.1':
             print('\nEntity tree (4 levels deep):\n')
             self.synset_idx[NOUN].get('00001740').pp_tree(4)
-        self.mode = UserLoop.MAIN_MODE
 
-    def print_choices(self):
+    def _action_print_choices(self, *args):
         print()
-        for choice, description in self.choices:
-            print("[%s]  %s" % (choice, description))
+        for choice, description in args:
+            print(">> %-6s  -  %s" % (choice, description))
+
+
+def home():
+    return ('h', 'home')
+
+def stats():
+    return ('a', 'show statistics')
+
+def end():
+    return ('q', 'quit')
+
+def back():
+    return ('b', 'back to the word')
+
+def search(category):
+    return ('s ' + category, 'search for the word')
 
 
 if __name__ == '__main__':
@@ -174,7 +182,5 @@ if __name__ == '__main__':
     if not wn_version in ('1.5', '3.1'):
         exit("ERROR: unsupported wordnet version")
 
-    wn = WordNet(wn_version, category)
-    if expand(category) == NOUN:
-        wn.add_nominal_basic_types()
+    wn = WordNet(wn_version, add_basic_types=True)
     UserLoop(wn, category)

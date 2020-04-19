@@ -1,5 +1,5 @@
 def index_file(wn_dir, version, cat):
-    """Return the relative path of the file in the WordNet distribution."""
+    """Return the relative path of the index file in the WordNet distribution."""
     if version == '1.5':
         subdir = 'wn15/DICT/'
         fname = "%s.IDX" % cat.upper()
@@ -10,7 +10,7 @@ def index_file(wn_dir, version, cat):
 
 
 def data_file(wn_dir, version, cat):
-    """Return the relative path of the file in the WordNet distribution."""
+    """Return the relative path of the data file in the WordNet distribution."""
     if version == '1.5':
         subdir = 'wn15/DICT/'
         fname = "%s.DAT" % cat.upper()
@@ -19,15 +19,14 @@ def data_file(wn_dir, version, cat):
         fname = "data.%s" % cat
     return wn_dir + subdir + fname
 
+
 def sense_file(wn_dir, version):
-    """Return the relative path of the index.sense file in the WordNet distribution."""
+    """Return the relative path of the index.sense file in the WordNet
+    distribution."""
     if version == '1.5':
-        subdir = 'wn15/DICT/'
-        fname = "index.sense"
+        return None
     else:
-        subdir = 'DICT/'
-        fname = "index.sense"
-    return wn_dir + subdir + fname
+        return wn_dir + 'DICT/index.sense'
 
 
 def flatten(some_list):

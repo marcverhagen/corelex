@@ -2,65 +2,64 @@
 
 Module that provides access to WordNet 1.5 and WordNet 3.1 data.
 
-It assumes that the two WordNet versions can be found using the directory
-template in WORDNET_DIR. It also assumes that the WordNet-3.1 distribution is as
+Assumes that the two WordNet versions can be found using the directory template
+in WORDNET_DIR. It also assumes that the WordNet-3.1 distribution is as
 downloaded from the WordNet website. Dowloading WordNet 1.5 gives you a
-directory wn14 and this directory should be immediately under the WordNet-1.5
+directory wn15 and this directory should be immediately under the WordNet-1.5
 directory.
 
-Loading WordNet requires a version (1.5 or 3.1) and a category (noun or verb):
+See https://wordnet.princeton.edu/documentation/wndb5wn for the format of the
+data and index files.
 
-   >>> wn = WordNet('1.5', NOUN)
-   Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/NOUN.IDX ...
-   Loading /DATA/resources/lexicons/wordnet/WordNet-1.5/wn15/DICT/NOUN.DAT ...
-   Loaded 87511 noun lemmas and 60557 noun synsets
-   Loaded 0 verb lemmas and 0 verb synsets
+Loading WordNet requires a version (1.5 or 3.1):
+
+   >>> wn = WordNet('3.1')
+   Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/index.noun ...
+   Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/index.verb ...
+   Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/data.noun ...
+   Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/data.verb ...
+   Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/index.sense ...
 
    >>> print(wn)
-   <WordNet cat=noun lemma-count=87511>
+   <WordNet 3.1 nouns=117953 verbs=11540>
 
-Searching for a lemma gives you a list of synset identifiers, which can be empty:
+Searching for a lemma gives you a Word instance, which stores the lemma and a
+list of sysnet identifiers:
 
-   >>> wn.get_noun('door')
-   ['02432728', '02435375', '03588923', '02433420', '02433281', '02433101']
-
-   >>> wn.get_noun('doorx')
-   []
+   >>> door = wn.get_noun('door')
+   >>> print(door)
+   <Word door - 03226423 03228735 05188408 03227021 03226879>
+   >>> door.synsets
+   ['03226423', '03228735', '05188408', '03227021', '03226879']
 
 Getting the synset object given a synset identifier:
 
-   >>> door_synset = wn.get_noun_synset('02432728')
+   >>> door_synset = wn.get_noun_synset('03226423')
    >>> print(door_synset)
-   <Synset 02432728 n door.06.0>
+   <Synset 03226423 n door.06.0>
 
 """
-
 
 import sys
 import copy
 import textwrap
 
 import cltypes
-from utils import flatten, blue, green, bold, boldgreen, index_file, data_file, sense_file
 from config import WORDNET_DIR
+from utils import flatten, blue, green, bold, boldgreen
+from utils import index_file, data_file, sense_file
 
-import pdb
+
+if sys.version_info.major < 3:
+    raise Exception("Python 3 is required.")
 
 NOUN = 'noun'
 VERB = 'verb'
 
-
-POINTER_SYMBOL_LIST = [
-
-    '!', '@', '@i', '~', '~i', '#m', '#s', '#p', '%m', '%s', '%p', '=', '+',
-    ';c', ';r', ';u', '-c', '-r', '-u',
-    '*', '>', '^', '$', '+',
-    '&', '<', '\\', '='
-]
-
+CATEGORY_ABBREVIATIONS = {'n': NOUN, 'v': VERB}
 
 POINTER_SYMBOLS = {
-
+    # taken from https://wordnet.princeton.edu/documentation/wninput5wn
     '!': 'Antonym',
     '@': 'Hypernym',
     '@i': 'Instance Hypernym',
@@ -80,113 +79,123 @@ POINTER_SYMBOLS = {
     '-c': 'Member of this domain - TOPIC',
     '-r': 'Member of this domain - REGION',
     '-u': 'Member of this domain - USAGE',
-
     '*': 'Entailment',
     '>': 'Cause',
     '^': 'Also see',
     '$': 'Verb Group',
-    '+': 'Derivationally related form',
-
     '&': 'Similar to',
     '<': 'Participle of verb',
     '\\': 'Pertainym (pertains to noun)',
-    '=': 'Attribute'
 }
-
-
-if sys.version_info.major < 3:
-    raise Exception("Python 3 is required.")
 
 
 def expand(category):
     """Mapping from abbreviations to category name."""
-    if category == 'n': return NOUN
-    if category == 'v': return VERB
-    return category
+    return CATEGORY_ABBREVIATIONS.get(category)
 
 
 class WordNet(object):
 
-    def __init__(self, wn_version, category=None):
+    """Class to store all WordNet information that we want access to.
 
-        if not wn_version in ('1.5', '3.1'):
+    Instance variables:
+
+    version
+        WordNet version, '1.5' or '3.1'
+
+    _lemma_idx
+        Stores Word instances indexed on category and lemma
+        Filled in by _load_lemmas()
+        { NOUN|VERB ==> DICT { lemma ==> Word } }
+        _lemma_idx['noun']['zoom'] ==> <Word zoom - 07390125 00327117>
+
+    _synset_idx
+        Stores Synset instances indexed on category and synset identifier
+        Filled in by _load_synsets()
+        { NOUN|VERB ==> DICT { synset_id ==> Synset } }
+        _synset_idx['noun']['07390125'] ==>
+          <Synset 07390125 n rapid_climb.11.0 rapid_growth.11.0 zoom.11.0>
+
+    _sense_idx
+        Stores synset identifiers (offsets) indexed on synset senses
+        { synset_sense ==> synset_id }
+        _sense_idx['zyrian%1:10:00::'] ==> '06969782'
+
+    _all_relations
+        A list of all relations where a relation is a pair of a Synset instance
+        and a Pointer instance. Filled in by get_all_basic_type_relations().
+
+    _basic_types
+        A dictionary with for each category (noun, verb) a list of all synsets
+        that are basic types. Filled in if add_basic_types in the initialization
+        method was set to True.
+
+    """
+
+    def __init__(self, wn_version, add_basic_types=False):
+        if wn_version not in ('1.5', '3.1'):
             exit("ERROR: unsupported wordnet version")
-
         self.version = wn_version
-        self.category = expand(category)
-
-        # store Word instances indexed on the lemmas and Synset instances on the
-        # synset identifiers
-        self._lemma_idx = { NOUN: {}, VERB: {} }
-        self._synset_idx = { NOUN: {}, VERB: {} }
-
-        # PGA
-        # map sense_id to synset_offset 
-        # and (lemma synset_offset) to synset number
+        self._lemma_idx = {NOUN: {}, VERB: {}}
+        self._synset_idx = {NOUN: {}, VERB: {}}
         self._sense_idx = {}
-        self._synset_no_idx = {}
-
-        # a list of all relations where a relation is a pair of a Synset
-        # instance and a Pointer instance
         self._all_relations = None
-
-        # a list of all synsets that are basic types
-        self._basic_types = { NOUN: [], VERB: [] }
-
-        #pdb.set_trace()
-
-        wn_dir = WORDNET_DIR % wn_version
-        
-        self._load_lemmas(NOUN, index_file(wn_dir, wn_version, NOUN))
-        self._load_synsets(NOUN, data_file(wn_dir, wn_version, NOUN))
-        self._load_lemmas(VERB, index_file(wn_dir, wn_version, VERB))
-        self._load_synsets(VERB, data_file(wn_dir, wn_version, VERB))
-        
-        # PGA: sense_file maps sense_keys to sense_offsets
-        # sense_keys do not change across versions, while sense_offsets can.
-        self._load_senses(sense_file(wn_dir, wn_version))
-
-        print("Loaded", self)
+        self._basic_types = {NOUN: [], VERB: []}
+        wn_dir = WORDNET_DIR % self.version
+        self._load_lemmas(NOUN, index_file(wn_dir, self.version, NOUN))
+        self._load_lemmas(VERB, index_file(wn_dir, self.version, VERB))
+        self._load_synsets(NOUN, data_file(wn_dir, self.version, NOUN))
+        self._load_synsets(VERB, data_file(wn_dir, self.version, VERB))
+        self._load_senses(sense_file(wn_dir, self.version))
+        if add_basic_types:
+            self.add_basic_types()
 
     def __str__(self):
-        return "<WordNet nouns=%d verbs=%d>" \
-            % (len(self._lemma_idx[NOUN]), len(self._lemma_idx[VERB]))
+        return "<WordNet %s nouns=%d verbs=%d>" \
+            % (self.version, len(self._lemma_idx[NOUN]), len(self._lemma_idx[VERB]))
 
     def _load_lemmas(self, cat, index_file):
+        """Load all lemmas from the index file."""
         print('Loading %s ...' % index_file)
         for line in open(index_file):
             if line.startswith('  ') or len(line) < 25:
                 continue
+            # Example input line:
+            #   zoom v 3 3 @ ~ + 3 1 02059445 02060133 01947577
             word = Word(line.strip())
             self._lemma_idx[cat][word.lemma] = word
 
     def _load_synsets(self, cat, data_file):
+        """Load all synsets from the data file."""
         print('Loading %s ...' % data_file)
         c = 0
         for line in open(data_file):
             c += 1
-            #if c > 50: break
+            # if c > 50: break
             if line.startswith('  ') or len(line) < 25:
                 continue
+           # Example input line:
+            #   02770203 43 v 01 flare_up 0 002 @ 02765572 v 0000 ~ 02767643 \
+            #   v 0000 01 + 01 00 | ignite quickly and suddenly, especially \
+            #   after having died down; "the fire flared up and died down \
+            #   once again"
             synset = Synset(self, line.strip(), cat)
             self._synset_idx[cat][synset.id] = synset
 
-    # PGA
-    # Load wordnet's index.sense file, that contains mappings from immutable
-    # sense keys to synset offsets (which can change from version to version)
-    # line example: bank%1:14:00:: 08437235 2 20
     def _load_senses(self, sense_file):
-        print('Loading index.sense file')
+        """Load wordnet's index.sense file, which contains mappings from immutable sense
+        keys to synset offsets (which can change from version to version)."""
+        if self.version == '1.5':
+            # there is no index.sense file for version 1.5, so skip it
+            return
+        print('Loading %s ...' % sense_file)
         for line in open(sense_file):
+            # Example input line:
+            #   bank%1:14:00:: 08437235 2 20
+            # TODO: maybe nice to use a Sense class
             sense_id, synset_offset, synset_no, corpus_count = line.split(" ")
             synset_no = int(synset_no)
             self._sense_idx[sense_id] = synset_offset
-            # Given a lemma and a synset offset, return the 
-            # number of that synset for the lemma.  Synsets are
-            # numbered by corpus frequency, so that the most
-            # frequent synset(s) appear with the lowest numbers.
-            lemma, rest = sense_id.split("%")
-            self._synset_no_idx[(lemma, synset_offset)] = synset_no
 
     def lemma_index(self):
         return self._lemma_idx
@@ -196,9 +205,6 @@ class WordNet(object):
 
     def sense_index(self):
         return self._sense_idx
-
-    def synset_no_idx(self):
-        return self._synset_no_idx
 
     def basic_types(self, cat=NOUN):
         return self._basic_types[cat]
@@ -214,8 +220,7 @@ class WordNet(object):
     def get_lemmas(self, lemma):
         """Return a dictionary with NOUN and VERB keys. The value of each key is
         a Word instance or None."""
-        return { NOUN: self.get_noun(lemma),
-                 VERB: self.get_verb(lemma) }
+        return {NOUN: self.get_noun(lemma), VERB: self.get_verb(lemma)}
 
     def get_noun_synset(self, synset_offset):
         """Return the synset object for the synset identifier."""
@@ -231,25 +236,31 @@ class WordNet(object):
         """return all synsets that are basic types."""
         return [ss for ss in self.get_all_synsets(cat) if ss.is_basic_type]
 
+    def reset_nominal_basic_types(self):
+        for synset in self._synset_idx[NOUN].values():
+            synset.basic_types = set()
+
     def add_basic_types(self):
         """Add basic type information to verb and noun synsets."""
         self.add_nominal_basic_types()
         self.add_verbal_basic_types()
-        
-    def add_nominal_basic_types(self):
+
+    def add_nominal_basic_types(self, btypes=None):
         """Add basic type information to noun synsets. This starts with the manually
         created lists in cltypes and adds information to the synsets mentioned
         in those lists. As a next step it descends down the hyponym tree for
         each marked synset and adds the basic types to sub synsets. If a synset
         is assigned two basic types bt1 and bt2 and bt1 is a subtype of bt2 then
         bt2 will not be included."""
-        btypes = cltypes.get_basic_types(self.version)
+        if btypes is None:
+            # use the default if no basic types were handed in
+            btypes = cltypes.get_basic_types(self.version)
         for btype in btypes:
             for synset_id, members in btypes[btype]:
                 synset = self.get_noun_synset(synset_id)
                 synset.is_basic_type = True
                 synset.basic_type_name = btype
-                synset.basic_types = set([btype])
+                synset.basic_types = {btype}
                 self._basic_types[NOUN].append(synset)
         for synset in self.basic_types(NOUN):
             for hyponym in synset.hyponyms():
@@ -268,7 +279,7 @@ class WordNet(object):
                 name = ' '.join(words)
                 synset.is_basic_type = True
                 synset.basic_type_name = name
-                synset.basic_types = set([name])
+                synset.basic_types = {name}
                 self._basic_types[VERB].append(synset)
         for synset in self.basic_types(VERB):
             for hyponym in synset.hyponyms():
@@ -323,7 +334,7 @@ class WordNet(object):
 
     def get_all_terminal_synsets(self, cat):
         """Return a list of all terminal synsets for the category."""
-        synsets = get_all_synsets(cat)
+        synsets = self.get_all_synsets(cat)
         synsets = [ss for ss in synsets if not ss.has_hyponyms]
         return synsets
 
@@ -350,10 +361,9 @@ class WordNet(object):
         bt_relations = []
         for source_synset, pointer in relations:
             # skip hypernyms and hyponyms
-            if pointer.symbol in ('~', '~i', '@', '@i'):
+            if pointer.is_hypernym_or_hyponym():
                 continue
-            # skip lexical links
-            if pointer.pointer_type != '0000':
+            if pointer.is_lexical():
                 continue
             target_synset = self.get_noun_synset(pointer.target_synset)
             # some pointers are not to nouns, skip them
@@ -369,7 +379,7 @@ class WordNet(object):
         """Utility method to generate all subtype-supertype pairs amongst basic
         types. Results from this can be hand-fed into the cltypes module."""
         pairs = []
-        for bt in self.get_basic_types():
+        for bt in self.get_basic_types(NOUN):
             synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.is_basic_type]
             super_types = set([ss.basic_type_name for ss in synsets])
             super_types.remove(bt.basic_type_name)
@@ -382,8 +392,7 @@ class WordNet(object):
 
 class Word(object):
 
-    # This class is only used as a way to store the synset identifiers that go
-    # with a lemma.
+    """Used to store the synset identifiers that go with a lemma."""
 
     def __init__(self, line):
         self.fields = line.split()
@@ -431,6 +440,10 @@ class Synset(object):
         self.id = fields.pop(0)
         self.lex_filenum = fields.pop(0)
         self.ss_type = fields.pop(0)
+        self.p_cnt = None
+        self.w_cnt = None
+        self.words = None
+        self.pointers = None
         self._parse_words(fields)      # sets self.w_cnt and self.words list
         self._parse_pointers(fields)   # sets self.p_cnt and self.pointers dictionary
         self.fields = fields
@@ -466,8 +479,23 @@ class Synset(object):
         basic_type = ' %s' % green('*' + self.basic_type_name) if self.is_basic_type else ''
         if not basic_type:
             basic_type = ' ' + green(' '.join(self.basic_types))
-        #return "%s %s" % (self.id, words)
+        # return "%s %s" % (self.id, words)
         return "<Synset %s %s %s%s>" % (self.id, self.ss_type, words, basic_type)
+
+    def parents(self):
+        return self.hypernyms()
+
+    def children(self):
+        return self.hyponyms()
+
+    def sisters(self):
+        my_sisters = []
+        for parent in self.parents():
+            for child in parent.children():
+                # do not include the source synset
+                if child != self:
+                    my_sisters.append(child)
+        return my_sisters
 
     @staticmethod
     def _validate_w_cnt(field):
@@ -478,13 +506,11 @@ class Synset(object):
             return True
         except ValueError:
             return False
-        return False
 
-    @staticmethod
-    def _validate_p_cnt(field, line):
+    def _validate_p_cnt(self, field, line):
         if len(field) != 3 or not field.isdigit():
             print("WARNING: '%s' is not a correct p_cnt" % self.p_cnt)
-            print(self.line)
+            print(line)
 
     def validate(self):
         if self.fields:
@@ -507,14 +533,21 @@ class Synset(object):
         self.words = []
         for i in range(self.w_cnt):
             self.words.append([fields.pop(0), fields.pop(0)])
+        # PGA: Store a flat list of the word strings themselves
+        self.l_words = [item[0] for item in self.words]
+        # word list excluding compound terms (containing "_")
+        self.simple_words = []
+        for item in self.l_words:
+            if "_" not in item:
+                self.simple_words.append(item)
 
     def _parse_pointers(self, fields):
         self._validate_p_cnt(fields[0], self.line)
         self.p_cnt = int(fields.pop(0))
         self.pointers = {}
         for i in range(self.p_cnt):
-            pointer = Pointer(fields)         
-            if not pointer.symbol in self.pointers:
+            pointer = Pointer(fields)
+            if pointer.symbol not in self.pointers:
                 self.pointers[pointer.symbol] = []
             self.pointers[pointer.symbol].append(pointer)
 
@@ -533,7 +566,7 @@ class Synset(object):
     def has_hypernyms(self):
         return self.pointers.get('@') is not None \
             or self.pointers.get('@i') is not None
-    
+
     def has_hyponyms(self):
         return self.pointers.get('~') is not None \
             or self.pointers.get('~i') is not None
@@ -568,7 +601,7 @@ class Synset(object):
         for symbol in pointer_list:
             pointers.extend(self.pointers.get(symbol, []))
         return [self.wn.get_synset(self.cat, p.target_synset)
-                for p in pointers if p.pointer_type == '0000']
+                for p in pointers if p.is_semantic()]
 
     def paths_to_top(self):
         hypernyms = self.hypernyms()
@@ -579,10 +612,10 @@ class Synset(object):
 
     def add_basic_type(self, synset):
         """Recursively add a basic type to a synset. This would be the basic type
-        that domitates the synset in the WordNet tree. Note that the synset given
+        that dominates the synset in the WordNet tree. Note that the synset given
         as an argument is not the basic type itself (since a basic type can contain
         more than one synset), but that it stores the name of the basic type in
-        one of its variables.""" 
+        one of its variables."""
         self.basic_types.add(synset.basic_type_name)
         for hyponym in self.hyponyms():
             hyponym.add_basic_type(synset)
@@ -597,7 +630,7 @@ class Synset(object):
     def pp(self):
         """Write a pretty print to the standard output. This includes printing
         identifiers before synsets like [3], which can be used for further navigation in
-        the userloop."""
+        the userloop used by the browser."""
         self.count = 0
         self.mappings = {}
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
@@ -609,11 +642,11 @@ class Synset(object):
         if self.hypernyms():
             print()
             self.pp_paths_to_top('  ')
-        for symbol in POINTER_SYMBOL_LIST:
+        for symbol in POINTER_SYMBOLS:
             self.pp_related_synsets(POINTER_SYMBOLS.get(symbol), pointer_symbols=[symbol])
         # not doing these because they can go to different categories
         # self.pp_attributes()
-        
+
     def pp_short(self):
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         print("  %s" % self)
@@ -646,7 +679,7 @@ class Synset(object):
             for synset in synsets:
                 print('    [%d] %s' % (self.count, synset.as_formatted_string()))
                 self.mappings[self.count] = synset
-                self.count +=1
+                self.count += 1
 
     def pp_hypernyms(self):
         self.pp_related_synsets('hypernyms', self.hypernyms())
@@ -676,16 +709,60 @@ class Synset(object):
 
 class Pointer(object):
 
+    """A pointer to another synset, either between words of the synset or between
+    the synsets themselves. Pointers in the source file are tuples of the form
+    <symbol, target_synset, pos, source_target>, they look like
+
+        @ 02765572 v 0000
+        ~ 02767643 v 0000
+
+    The source is implied because a Pointer always lives inside of a Synset
+    instance (similar to how pointer tuples are associated with a source synset
+    in the source file).
+
+    Instance variables:
+
+    symbol
+        The pointer symbol, see the POINTER_SYMBOLS dictionary. The pointer
+        symbol is a shorthand for a WordNet relation.
+
+    target_synset
+        The identifier of the target synset.
+
+    pos
+        The part of speeach of the target synset.
+
+    source_target
+        The exact source and target. If this is 0000 then the relation is
+        between the synsets. Otherwise the first two digits identify the source
+        word and the second two the target word. For example, if the type is
+        0301 then the relation is between the third word of the source synset
+        and the first word of the target synset.
+
+    """
+
     def __init__(self, fields):
         """Initialize a pointer from the first four elements of the fields list. This
         removes the first four elements of fields."""
         self.symbol = fields.pop(0)
         self.target_synset = fields.pop(0)
         self.pos = fields.pop(0)
-        self.pointer_type = fields.pop(0)
+        self.source_target = fields.pop(0)
 
     def __str__(self):
-        return "<Pointer %s %s %s %s>" % (self.pos, self.symbol, self.target_synset, self.pointer_type)
+        return "<Pointer %s %s %s %s>" % (self.pos, self.symbol,
+                                          self.target_synset, self.source_target)
+
+    def is_lexical(self):
+        """Return true if the relation is between words."""
+        return self.source_target != '0000'
+
+    def is_semantic(self):
+        """Return true if the relation is between synsets."""
+        return self.source_target == '0000'
+
+    def is_hypernym_or_hyponym(self):
+        return pointer.symbol in ('~', '~i', '@', '@i')
 
 
 if __name__ == '__main__':

@@ -107,6 +107,50 @@ associated with a CoreLex type.
 """
 
 
+BASIC_TYPES = {
+
+    'abs': 'abstraction',
+    'act': 'action',
+    'agt': 'causal_agent',
+    'anm': 'animal',
+    'art': 'artifact',
+    'atr': 'attribute',
+    'cel': 'cell',
+    'chm': 'chemical',
+    'com': 'communication',
+    'con': 'consequence',
+    'ent': 'entity',
+    'evt': 'event',
+    'fod': 'food',
+    'frm': 'form',
+    'grb': 'biologial_group',
+    'grp': 'group',
+    'grs': 'social_group',
+    'hum': 'human',
+    'lfr': 'living_thing',
+    'lme': 'linear_measure',
+    'loc': 'location',
+    'log': 'region',
+    'mea': 'measure',
+    'mic': 'micro-organsim',
+    'nat': 'natural_object',
+    'phm': 'phenomenon',
+    'pho': 'physical_entity',
+    'plt': 'plant',
+    'pos': 'possession',
+    'pro': 'process',
+    'prt': 'part',
+    'psy': 'psychological_feature',
+    'qud': 'definite_quantity',
+    'qui': 'indefinite_quantity',
+    'rel': 'relation',
+    'spc': 'space',
+    'sta': 'state',
+    'sub': 'matter',
+    'tme': 'time'
+}
+
+
 BASIC_TYPES_1_5 = {
 
     'abs': [('00012670', 'abstraction')],
