@@ -14,6 +14,7 @@
 # config.sh must define CLDATA_DIR (same as in config.py) and SEMCOR_DIR, the location of
 # the semcor3.0 directory.
 # (Note that config.py and config.sh should be added to .gitignore if not already there.)
+# CLDATA_DIR/semcor.db should not already exist
 
 # Usage:
 

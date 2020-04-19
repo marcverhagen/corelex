@@ -23,7 +23,7 @@ Loading WordNet requires a version (1.5 or 3.1):
    >>> print(wn)
    <WordNet 3.1 nouns=117953 verbs=11540>
 
-Searching for a lemma gives you a Worfd instance, which stores the lemma and a
+Searching for a lemma gives you a Word instance, which stores the lemma and a
 list of sysnet identifiers:
 
    >>> door = wn.get_noun('door')
@@ -123,11 +123,12 @@ class WordNet(object):
 
     _all_relations
         A list of all relations where a relation is a pair of a Synset instance
-        and a Pointer instance
+        and a Pointer instance. Filled in by get_all_basic_type_relations().
 
     _basic_types
         A dictionary with for each category (noun, verb) a list of all synsets
-        that are basic types
+        that are basic types. Filled in if add_basic_types in the initialization
+        method was set to True.
 
     """
 
@@ -147,7 +148,7 @@ class WordNet(object):
         self._load_synsets(VERB, data_file(wn_dir, self.version, VERB))
         self._load_senses(sense_file(wn_dir, self.version))
         if add_basic_types:
-            self._add_basic_types()
+            self.add_basic_types()
 
     def __str__(self):
         return "<WordNet %s nouns=%d verbs=%d>" \
@@ -173,7 +174,7 @@ class WordNet(object):
             # if c > 50: break
             if line.startswith('  ') or len(line) < 25:
                 continue
-            # Example input line:
+           # Example input line:
             #   02770203 43 v 01 flare_up 0 002 @ 02765572 v 0000 ~ 02767643 \
             #   v 0000 01 + 01 00 | ignite quickly and suddenly, especially \
             #   after having died down; "the fire flared up and died down \
@@ -235,19 +236,25 @@ class WordNet(object):
         """return all synsets that are basic types."""
         return [ss for ss in self.get_all_synsets(cat) if ss.is_basic_type]
 
-    def _add_basic_types(self):
-        """Add basic type information to verb and noun synsets."""
-        self._add_nominal_basic_types()
-        self._add_verbal_basic_types()
+    def reset_nominal_basic_types(self):
+        for synset in self._synset_idx[NOUN].values():
+            synset.basic_types = set()
 
-    def _add_nominal_basic_types(self):
+    def add_basic_types(self):
+        """Add basic type information to verb and noun synsets."""
+        self.add_nominal_basic_types()
+        self.add_verbal_basic_types()
+
+    def add_nominal_basic_types(self, btypes=None):
         """Add basic type information to noun synsets. This starts with the manually
         created lists in cltypes and adds information to the synsets mentioned
         in those lists. As a next step it descends down the hyponym tree for
         each marked synset and adds the basic types to sub synsets. If a synset
         is assigned two basic types bt1 and bt2 and bt1 is a subtype of bt2 then
         bt2 will not be included."""
-        btypes = cltypes.get_basic_types(self.version)
+        if btypes is None:
+            # use the default if no basic types were handed in
+            btypes = cltypes.get_basic_types(self.version)
         for btype in btypes:
             for synset_id, members in btypes[btype]:
                 synset = self.get_noun_synset(synset_id)
@@ -262,7 +269,7 @@ class WordNet(object):
         for synset in self.get_all_noun_synsets():
             synset.reduce_basic_types(type_relations)
 
-    def _add_verbal_basic_types(self):
+    def add_verbal_basic_types(self):
         count = 0
         for synset in self.get_all_verb_synsets():
             if not synset.has_hypernyms():
@@ -605,7 +612,7 @@ class Synset(object):
 
     def add_basic_type(self, synset):
         """Recursively add a basic type to a synset. This would be the basic type
-        that domitates the synset in the WordNet tree. Note that the synset given
+        that dominates the synset in the WordNet tree. Note that the synset given
         as an argument is not the basic type itself (since a basic type can contain
         more than one synset), but that it stores the name of the basic type in
         one of its variables."""
