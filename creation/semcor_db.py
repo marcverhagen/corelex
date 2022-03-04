@@ -1,47 +1,69 @@
-"""
-semcor_db.py contains functions for performing useful queries over the sqlite database
-semcor.db, created by create_semcor_db.sh 
+"""semcor_db.py
 
-semcor.db schema:
+Contains functions for performing useful queries over the sqlite database
+semcor.db, created by semcor_db.sh.
 
-sent(sent_id integer primary key, doc_id varchar(10), para_no integer, sent_no integer, first_token_id integer, sentence text)
+Dependencies: nested_dict package must be installed
 
-token(token_id integer primary key, sent_id integer, token_no integer, surface text, lemma text, pos varchar(6), sense_no integer, sense_key text,ssid varchar(10), dom_token_no integer, dom_token_id integer, rel varchar(14) )
+SCHEMA:
 
-Usage:
-# open a connection and get a cursor:
-c = semcor_db.get_cursor()
+sent(
+    sent_id integer primary key,
+    doc_id varchar(10),
+    para_no integer,
+    sent_no integer,
+    first_token_id integer,
+    sentence text)
 
-# given a cursor, lemma, synset_id (ssid), and relation,
-# return a list of [lemma, ssid] pairs for dominating words
-r = semcor_db.get_dom_lemma_ssid(c, "victory", "07488581", "dobj")
-Example:
+token(
+    token_id integer primary key,
+    sent_id integer,
+    token_no integer,
+    surface text,
+    lemma text,
+    pos varchar(6),
+    sense_no integer,
+    sense_key text,
+    ssid varchar(10),
+    dom_token_no integer,
+    dom_token_id integer,
+    rel varchar(14) )
+
+USAGE:
+
+Open a connection and get a cursor:
+
+>>> c = semcor_db.get_cursor()
+
+Given a cursor, lemma, synset_id (ssid), and relation, return a list of [lemma,
+ssid] pairs for dominating words:
+
 >>> r = semcor_db.get_dom_lemma_ssid(c, "victory", "07488581", "dobj")
 >>> r
 [['give', '01632595'], ['gain', '02293158'], ['describe', '00007846'], ['give', '01632595'], ['total', '02651091']]
 
-Dependencies:
-nested_dict package must be installed
 """
 
-from collections import defaultdict
-from config import CLDATA_DIR
-from wordnet import WordNet
+import os
+import sys
 import itertools
 import pdb
-import os
-import semcor_cl
-import sys
 import sqlite3
+from collections import defaultdict
+
 from nested_dict import nested_dict
+
+from config import CLDATA_DIR
+from wordnet import WordNet
+import semcor_cl
 
 # to reload: >>> from importlib import reload
 
+
 # c = semcor_db.get_cursor()
 def get_cursor():
-    "establish a connection to semcor.db and return a connection object"
+    """establish a connection to semcor.db and return a connection object"""
     database_filename = "semcor.db"
-
     db_path = os.path.join(CLDATA_DIR, database_filename)
     conn = sqlite3.connect(db_path)
     # set row_factory method to allow access to fields in a row by name
@@ -50,7 +72,7 @@ def get_cursor():
     return(c)
  
 
-#victory|07488581|dobj|
+# victory|07488581|dobj|
 # r = semcor_db.get_dom(c, "victory", "07488581", "dobj")    
 def get_dom(c, lemma, ssid, rel):
     # select m.lemma, m.rel, d.lemma, d.ssid from token m inner join token d on m.dom_token_id = d.token_id where m.rel = "dobj";
@@ -58,10 +80,6 @@ def get_dom(c, lemma, ssid, rel):
     args = (lemma, ssid, rel)
     c.execute(sql, args)
     results = c.fetchall()
-    """
-    for result in results:
-        print(result)
-    """
     return(results)
 
 # return matches for sense, lemma, or synset, given a list of dominant relations
@@ -79,10 +97,6 @@ def get_sense_dom(c, lemma, ssid, rels):
     args.extend(rels)
     c.execute(sql, args)
     results = c.fetchall()
-    """
-    for result in results:
-        print(result)
-    """
     return(results)
 
 # rss = semcor_db.get_synset_dom(c, "07488581", ["dobj", "nsubj"])    
@@ -93,10 +107,6 @@ def get_synset_dom(c, ssid, rels):
     args.extend(rels)
     c.execute(sql, args)
     results = c.fetchall()
-    """
-    for result in results:
-        print(result)
-    """
     return(results)
 
 
@@ -108,10 +118,6 @@ def get_lemma_dom(c, lemma, rels):
     args.extend(rels)
     c.execute(sql, args)
     results = c.fetchall()
-    """
-    for result in results:
-        print(result)
-    """
     return(results)
 
 
@@ -122,10 +128,7 @@ def get_sent(c, sent_id):
     args = (sent_id, )
     c.execute(sql, args)
     results = c.fetchall()
-    """
-    for result in results:
-        print(result)
-    """
+
     return(results)
 
 # r = semcor_db.get_dom_lemma_ssid(c, "victory", "07488581", "dobj")    
@@ -134,7 +137,6 @@ def get_dom_lemma_ssid(c, lemma, ssid, rel):
     doms = []
     for r in rs:
         doms.append( [ r['lemma'], r['ssid'] ] )
-        
     return(doms)
                     
         
