@@ -1,4 +1,4 @@
-"""btype_manager.py
+"""btypes.py
 
 Contains a class to manage basic types. You can
 
@@ -11,9 +11,9 @@ Contains a class to manage basic types. You can
 
 Load with the default WordNet version and print a list of basic types
 
-    >>> btm = BasicTypeManager()
+    >>> btm = BasicTypes()
     >>> print(btm)
-    <BasicTypeManager with 37 types>
+    <BasicTypes with 37 types>
 
 Remove the articaft type
 
@@ -44,7 +44,7 @@ import wordnet
 import cltypes
 
 
-class BasicTypeManager(object):
+class BasicTypes(object):
 
     def __init__(self, types=None, wn=None):
         """Types and WordNet instance can be handed in, if not defaults will be used."""
@@ -53,7 +53,7 @@ class BasicTypeManager(object):
         self.wn = wordnet.WordNet('3.1') if wn is None else wn
 
     def __str__(self):
-        return "<BasicTypeManager with %s types>" % len(self.types)
+        return "<BasicTypes with %s types>" % len(self.types)
 
     def print_types(self, verbose=True):
         """Pretty print types to the terminal."""
@@ -100,7 +100,7 @@ class BasicTypeManager(object):
 
 if __name__ == '__main__':
 
-    btm = BasicTypeManager()
+    btm = BasicTypes()
 
     print(btm)
     btm.remove_type('art')

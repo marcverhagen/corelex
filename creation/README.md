@@ -10,7 +10,7 @@ The main modules in this directory do the following:
 
 ## Requirements and Installation
 
-This code is known to run on Python 3.7 on OSX and Linux, it is very possible that the code runs on Python 3.5 and 3.6 as well. No third party modules are used in the code described here, but some modules like semcor_cl.py and semcor_parse.py do use non-standard modules (nltk, bs4 and lxml).
+This code is known to run on Python 3.7 on OSX and Linux, it is very possible that the code runs on Python 3.5 and 3.6 as well. No third party modules are used in the code described here, but some modules like semcor_cl.py and semcor_parse.py do use non-standard modules (nltk, bs4 and lxml), see semcor.md for more information on those modules.
 
 For installation you need to copy the file `config.sample.py` to `config.py` and edit the variables in that file to match your local set up. For creating CoreLex you only need to look at `WORDNET_DIR`, which points to the WordNet sources.
 
@@ -48,13 +48,19 @@ To load WordNet in Python do
 This loads version 3.1 of WordNet, you can use '1.5' instead. Once WordNet is loaded you can search and navigate it:
 
 ```python
->>> wn.get_noun('door').synsets
-['02432728', '02435375', '03588923', '02433420', '02433281', '02433101']
->>> door = wn.get_noun_synset('02432728')
->>> door
-<Synset 02432728 n door.06.0>
->>> print(door.hypernyms()[0])
-<Synset 02801978 n movable_barrier.06.0>
+>>> door = wn.get_noun('door')
+>>> door_06_0 = wn.get_noun_synset('03226423')
+>>> door.synsets
+>>> print(door_06_0)
+>>> print(door_06_0.hypernyms()[0])
+```
+
+The last three executions will print the following:
+
+```
+['03226423', '03228735', '05188408', '03227021', '03226879']
+<Synset 03226423 n door.06.0>
+<Synset 03801102 n movable_barrier.06.0>
 ```
 
 You can add a set of basic types to the WordNet instance:
@@ -62,11 +68,14 @@ You can add a set of basic types to the WordNet instance:
 ```python
 >>> from cltypes import BASIC_TYPES_3_1
 >>> wn.add_nominal_basic_types(BASIC_TYPES_3_1)
->>> wn.get_noun_synset('02432728').basic_types
-{'art'}
+>>> wn.get_noun_synset('03226423').basic_types
 ```
 
-Note that instead of importing the basic types from cltypes you can get them in any other way as long as they have the same format as cltypes.BASIC_TYPES_3_1.
+This will print
+
+```
+{'art'}
+```
 
 To include the default basic types when loading WordNet do
 
@@ -90,7 +99,7 @@ If you already had basic types added and want to replace them you need to reset 
 
 The `corelex.py` module creates a basic CoreLex from WordNet:
 
-```
+```bash
 $ python3 corelex.py --create-cltype-files <version>
 ```
 
@@ -107,7 +116,7 @@ See the docstring in the `corelex` module for more details.
 
 Start the command line browser by running
 
-```
+```bash
 $ python3 browse.py <version> <category>
 ```
 

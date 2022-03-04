@@ -27,10 +27,10 @@ This loads WordNet 3.1 using the wordnet.py module and then creates six files:
    data/corelex-2.0-verbs.tab
 
 Note that the WordNet version is not the same as the CoreLex version. In this
-case we used WordNet 3.1 and we created CoreLex 2.0, as specified by the
-CORELEX_VERSION global variable. If we had used WordNet 1.5 then we would have
-created CoreLex x.x. See the comment just above the CORELEX_VERSION variable for
-more on this.
+case we used WordNet 3.1 and we created CoreLex 2.0, which was specified by the
+CORELEX_VERSION global variable, which is taken from the ../VERSION file. If we
+had used WordNet 1.5 then we would have created CoreLex x.x. See the comment
+just above the CORELEX_VERSION variable for more on this.
 
 The cltypes files contain mappings from cltypes (or rather, polysemous types) to
 lemmas. The cltypes tab files can later be used to load CoreLex, the cltypes txt
@@ -56,7 +56,7 @@ types, where significant is determined using some version of the chi-square
 test. The rest of the directory contains html pages with more comprehensive
 views of the relations.
 
-This is experimental and it does not yet work for verbs.
+This is experimental and it only works for nouns.
 
 
 ==> Exporting CoreLex as SQL files
@@ -112,11 +112,11 @@ def create_basic_type_relations(wn, version, category):
     """Collect all relations and then turn them into relations between basic
     types. Store the relations not as individual relations but as a relation
     signature between basic types, where the signature specifies how many
-    relations of a given type occur between the two synsets. Files created:
+    relations of a given type occur between the two synsets. Output created:
 
        data/corelex-VERSION-CATEGORY-relations.txt
        data/corelex-VERSION-CATEGORY-basic-type-relations.txt
-       data/corelex-VERSION-CATEGORY-basic-type-relations
+       data/corelex-VERSION-CATEGORY-basic-type-relations/
 
     The first has all relations as 5-tuples with basic types, pointers and the
     identifiers of the source and target synsets. The second is a summary file
@@ -129,8 +129,8 @@ def create_basic_type_relations(wn, version, category):
 
     # writing results
     c = expand(category)
-    relations = 'data/corelex-%s-%ss-relations.txt' % (version, c)
-    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (version, c)
+    relations = 'data/corelex-%s-%ss-relations.txt' % (CORELEX_VERSION, c)
+    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (CORELEX_VERSION, c)
     with open(relations, 'w') as fh:
         for bt_relation in bt_relations:
             source = bt_relation[3]
@@ -816,7 +816,8 @@ class RelationsWriter(object):
     def __init__(self, basic_type_relations):
         self.btr = basic_type_relations
         self.html_dir = "data/corelex-%s-%ss-basic-type-relations" \
-                        % (self.btr.version, expand(self.btr.category))
+                        % (CORELEX_VERSION, expand(self.btr.category))
+                        #% (self.btr.version, expand(self.btr.category))
         self.rels_dir = os.path.join(self.html_dir, 'rels')
         self.index_file = os.path.join(self.html_dir, "index.html")
         self.basic_types = cltypes.get_basic_types(self.btr.version)
@@ -943,7 +944,7 @@ if __name__ == '__main__':
     version = sys.argv[2]
 
     if flag == '--create-cltype-files':
-        wn = WordNet(wordnet_version, add_basic_types=True)
+        wn = WordNet(version, add_basic_types=True)
         create_lemma_to_cltype_files(wn)
 
     elif flag == '--sql':

@@ -11,7 +11,7 @@ directory.
 See https://wordnet.princeton.edu/documentation/wndb5wn for the format of the
 data and index files.
 
-Loading WordNet requires a version (1.5 or 3.1):
+Loading WordNet requires version 1.5 or 3.1:
 
    >>> wn = WordNet('3.1')
    Loading /DATA/resources/lexicons/wordnet/WordNet-3.1/DICT/index.noun ...
@@ -756,7 +756,7 @@ class Pointer(object):
         return self.source_target == '0000'
 
     def is_hypernym_or_hyponym(self):
-        return pointer.symbol in ('~', '~i', '@', '@i')
+        return self.symbol in ('~', '~i', '@', '@i')
 
 
 if __name__ == '__main__':
