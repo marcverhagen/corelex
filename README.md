@@ -10,7 +10,7 @@ This repository contains the following:
 
 1. [Legacy CoreLex](legacy). Sources of the legacy CoreLex as well as new code to create database tables from those sources.
 
-2. [CoreLex Browser](browser). The PHP code that gives access to an online database created from the CoreLex sources. The pages themselves are hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser).
+2. [CoreLex Browser](browser). The legacy PHP code that gave web access to an online database created from the CoreLex sources. The web pages themselves were hosted at [http://timeml.org/corelex/browser](http://timeml.org/corelex/browser), but that site is now defunct.
 
 3. [CoreLex Creation](creation). Code to automatically create CoreLex from WordNet.
 

@@ -1,11 +1,12 @@
-"""
-NOTE: To create the semcor.db sqlite database, use create_semcor_db.sh, 
-a script which calls the approporiate functions here.
+"""semcor_parse.py
 
-semcor_parse.py contains functions to extract annotation data from the semcor 
-brown corpus (brown1, brown2) and to create the data files needed to run
-the Stanford dependency parser over the corpus and subsequently merge the 
-parsed output with the annotated data (doc, sentence, wordnet features)
+NOTE: To create the semcor.db sqlite database, use semcor_db.sh, a script which
+calls the approporiate functions here.
+
+semcor_parse.py contains functions to extract annotation data from the semcor
+brown corpus (brown1, brown2) and to create the data files needed to run the
+Stanford dependency parser over the corpus and subsequently merge the parsed
+output with the annotated data (doc, sentence, wordnet features)
 
 Dependencies: bs4 and lxml packages must be installed.
 pip install bs4
@@ -46,18 +47,21 @@ sent_id, doc_id, para_no, sent_no, first_token_id, text
 
 """
 
+import os
+import sys
+import itertools
+import pdb
 from collections import defaultdict
+
+from bs4 import BeautifulSoup
+
 from config import CLDATA_DIR
 from config import SEMCOR_DIR
 from wordnet import WordNet
-import itertools
-import pdb
-import os
 import semcor_cl
-from bs4 import BeautifulSoup
-import sys
 
 # to reload: >>> from importlib import reload
+
 
 # create a wordnet object
 wn = WordNet('3.1')
@@ -70,10 +74,10 @@ def semcor_sent2str(semcor_sent):
     # uses to represent tagged chunks.
     #for node in semcor_sent:
      
-    # global_sent_no can be used to add new files with output starting at
-    # (1 + global_sent_no).  Normally, we'd pass in a file_list and leave
-    # the default as 0.  Then the output file will have a constinuous
-    # list of sentence numbers starting at 1.
+# global_sent_no can be used to add new files with output starting at
+# (1 + global_sent_no).  Normally, we'd pass in a file_list and leave
+# the default as 0.  Then the output file will have a constinuous
+# list of sentence numbers starting at 1.
 def secmcor_files2tagged_chunks(file_list, tagged_file, lexsn_file, global_sent_no=0):
     with open(lexsn_file, 'w') as lexsn_str:
         with open(tagged_file, 'w') as tagged_str:
@@ -133,7 +137,6 @@ def semcor_str2tagged_chunks(semcor_file, tagged_str, lexsn_str, global_sent_no=
 
             # output a comment with document info for the sentence
             lexsn_str.write("\n#sent %s %s %s %i\n" % (current_filename, current_para_no, current_sent_no, global_sent_no))
-
             
             # Not every line in a sent is a wf! (some are punc)
             for chunk in sent.find_all():

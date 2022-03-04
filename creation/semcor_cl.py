@@ -373,7 +373,7 @@ class SemCorF():
                 s2_gloss = self.wordnet.get_noun_synset(s2).gloss
                 fh.write("%s\t%s\t%s\t%s\t%s\n" % (lemma, joined_basic_types, s1, s2,  '|'.join([s1_gloss, s2_gloss])))
 
-
+##############################################################
 def create_parallel(write_output_p = False):
     wn = WordNet('3.1', add_basic_types=True)
     para = Parallel(wn)
@@ -384,12 +384,15 @@ def create_parallel(write_output_p = False):
 # wn = wordnet.WordNet('3.1', add_basic_types=True)
 # import semcor_cl
 # semcor_cl.run_para(wn)
+
+# Generate a sorted pairs file and a parallels file
 def run_para(wn):
     p = Parallel(wn)
-    # p.top_pair_parallels(10, 10000)
     p.filter_pair_file()
+    p.top_pair_parallels(10, 10000)
 
 
+# p = semcor_cl.create_parallel()
 class Parallel():
 
     def __init__(self, wn):
@@ -410,15 +413,28 @@ class Parallel():
     #class sister_pair(self):
         #self.synset
 
+    
     def word2bt_synsets(self, word, basic_type):
+        """
+        Given a word and a basic type, return a list of synsets for the word that match 
+        the basic type. If the word has no synsets (i.e. it is an unknown word), return the 
+        word as an unknown word in the second field of the tuple returned.  This allows the 
+        caller to distinguish between a word that has no synsets of the given basic_type and
+        one which is altogether unknown in wordnet.
+        """
         word_synset_ids = []
         word_obj = self.wordnet.get_noun(word)
+        # We want to distinguish a lemma that has no synset at all (i.e., unknown word)
+        # from a lemma that has no synset of the desired basic_type
+        unknown_word = ""
         # It is possible to get a word that is referenced in a synset which does
         # not have its own wordnet entry (e.g. "Anglo-Saxon").  So we have to
         # test for that situation here by seeing if the resulting word object is null.
         if word_obj == None:
             print("[semcor_cl.py]word2bt_synsets: word not in wordnet: %s\n" % word)
-            return([])
+            unknown_word = word
+            
+            #return([])
         else:
             word_synset_ids = self.wordnet.get_noun(word).synsets
 
@@ -430,7 +446,7 @@ class Parallel():
         for synset in word_synsets:
             if basic_type in synset.basic_types:
                 wbt_synsets.append(synset)
-        return(wbt_synsets)
+        return((wbt_synsets, unknown_word))
 
     # Given a lemma and two synsets for the lemma
     # Find sister synsets of synset 1 that have lemmas with synsets which also
@@ -444,6 +460,7 @@ class Parallel():
         sister_lemmas = []
         parallels = []
         no_parallels = []
+        unknown_words = []
         # extract the (simple word) lemmas for sister synsets
         for sister_synset in ss1.sisters():
             l_simple_words = sister_synset.simple_words
@@ -452,20 +469,24 @@ class Parallel():
 
         #pdb.set_trace()
         for word in sister_lemmas:
-            sister_word_synsets = self.word2bt_synsets(word, basic_type_2)
+            (sister_word_synsets, unknown_word) = self.word2bt_synsets(word, basic_type_2)
             # track any word that has no parallel synset (with desired basic_type)
             if sister_word_synsets == []:
-                no_parallels.append(word)
-                if verbose_p:
-                    print("no parallel for: %s\n" % word)
+                if unknown_word != "":
+                    unknown_words.append(unknown_word)
+                else:
+                    no_parallels.append(word)
+                    if verbose_p:
+                        print("no parallel for: %s\n" % word)
             for sister_word_synset in sister_word_synsets:
                 parallels.append((word, sister_word_synset))
                 if verbose_p:
                     print("%s\t%s\t%s\n" % (word, sister_word_synset.id, sister_word_synset.gloss))
 
-        return(parallels, no_parallels)
+        return(parallels, no_parallels, unknown_words)
 
     def top_pair_parallels(self, min_count = 10, limit = 100000000):
+        """
         # any pair of unequal basic types with semcor frequency >= min_count
         d_top_pairs = {}
         for line in open(self.sorted_pairs_file):
@@ -477,33 +498,47 @@ class Parallel():
                 d_top_pairs[(bt1, bt2)] = count
             else:
                 continue
+        """
 
         # open our output file for parallels
         with open(self.para_file, 'w') as parallels_str:
             # iterate through the sorted file of pairs found in semcor
             # watch for limit (to process a subset of the file)
             line_number = 0
-            for line in open(self.semcor_pairs_nouns_file):
-                line_number += 1
-                if line_number > limit:
-                    print("Reached line limit: %i\n" % line_number)
-                    return()
+            #for line in open(self.semcor_pairs_nouns_file):
+            for line in open(self.filtered_pair_file):
                 # conditions: 
                 # 1. Pair must be high frequency (ie. in the d_top_pairs dict
                 # 2. Pair must be composed of two different basic types
                 # (Note that many pairs have the same basic type. We ignore these
                 # for now.)
-                (lemma1, bt_pair, sid1, sid2, glosses) = line.split("\t")
-                (basic_type_1, basic_type_2) = bt_pair.split(" ")
-                if basic_type_1 == basic_type_2:
-                    continue
-                (parallels, no_parallels) = self.find_parallels(lemma1, sid1, sid2, basic_type_1, basic_type_2)
-                parallels_str.write("%s\t%s\t%s %s\t%s\n" % (lemma1, bt_pair, sid1, sid2, glosses))
-                for parallel in parallels:
-                    (word, sister_word_synset) = parallel
-                    parallels_str.write("\t%s\t%s\t%s\n" % (word, sister_word_synset.id, sister_word_synset.gloss))
-                #parallels_str.write("\tNo match: %s\n\n" % no_parallels)
+                #(lemma1, bt_pair, sid1, sid2, glosses) = line.split("\t")
+                line = line.strip()
+                if line != "":
+                    line_number += 1
+                    # Terminate if we have reached our line limit
+                    if line_number > limit:
+                        print("Reached line limit: %i\n" % line_number)
+                        return()
 
+                    # Parse the fields and process the line for parallels
+                    (count, bt_pair, lemma1, sid1_sid2, glosses) = line.split("\t")
+                    # Terminate if we have reached the minimum count
+                    if int(count) <= min_count:
+                        return()
+
+                    (basic_type_1, basic_type_2) = bt_pair.split(" ")
+                    if basic_type_1 == basic_type_2:
+                        continue
+                    (sid1, sid2) = sid1_sid2.split(" ")
+                    (parallels, no_parallels, unknown_words) = self.find_parallels(lemma1, sid1, sid2, basic_type_1, basic_type_2)
+                    parallels_str.write("%s\t%s\t%s\t%s %s\t%s\n" % (count, lemma1, bt_pair, sid1, sid2, glosses))
+                    for parallel in parallels:
+                        (word, sister_word_synset) = parallel
+                        parallels_str.write("\t%s\t%s\t%s\n" % (word, sister_word_synset.id, sister_word_synset.gloss))
+                        
+                    parallels_str.write("\tNo match: %s\n\n" % no_parallels)
+                    parallels_str.write("\tUnknown words: %s\n\n" % unknown_words)
         print("Processed line number: %i\n" % line_number)
 
     # Take a pair file sorted by the pair field (column 2)

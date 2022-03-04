@@ -24,4 +24,4 @@ source ./config.sh
 
 filename=$1
 
-cat $CLDATA_DIR/$filename.tagged | java -jar stanford-nndep-wrapper-1.0-SNAPSHOT-fatjar.jar -d~ -o $CLDATA_DIR/$filename.parse
+cat $CLDATA_DIR/$filename.tagged | java -jar parser/stanford-nndep-wrapper-1.0-SNAPSHOT-fatjar.jar -d~ -o $CLDATA_DIR/$filename.parse

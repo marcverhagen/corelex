@@ -76,6 +76,14 @@ To include the default basic types when loading WordNet do
 
 This will load the default types for the specified WordNet version from cltypes.py.
 
+If you already had basic types added and want to replace them you need to reset them first:
+
+```python
+>>> from cltypes import BASIC_TYPES_3_1
+>>> wn.reset_nominal_basic_types()
+>>> wn.add_nominal_basic_types(BASIC_TYPES_3_1)
+```
+
 
 
 ## Creating CoreLex

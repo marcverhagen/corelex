@@ -174,7 +174,7 @@ class WordNet(object):
             # if c > 50: break
             if line.startswith('  ') or len(line) < 25:
                 continue
-           # Example input line:
+            # Example input line:
             #   02770203 43 v 01 flare_up 0 002 @ 02765572 v 0000 ~ 02767643 \
             #   v 0000 01 + 01 00 | ignite quickly and suddenly, especially \
             #   after having died down; "the fire flared up and died down \
@@ -234,11 +234,11 @@ class WordNet(object):
 
     def get_basic_types(self, cat):
         """return all synsets that are basic types."""
-        return [ss for ss in self.get_all_synsets(cat) if ss.is_basic_type]
+        return [ss for ss in self.get_all_synsets(cat) if ss.is_basic_type()]
 
     def reset_nominal_basic_types(self):
         for synset in self._synset_idx[NOUN].values():
-            synset.basic_types = set()
+            synset.reset_basic_types()
 
     def add_basic_types(self):
         """Add basic type information to verb and noun synsets."""
@@ -258,8 +258,7 @@ class WordNet(object):
         for btype in btypes:
             for synset_id, members in btypes[btype]:
                 synset = self.get_noun_synset(synset_id)
-                synset.is_basic_type = True
-                synset.basic_type_name = btype
+                synset.basic_type = btype
                 synset.basic_types = {btype}
                 self._basic_types[NOUN].append(synset)
         for synset in self.basic_types(NOUN):
@@ -277,8 +276,7 @@ class WordNet(object):
                 words = ["%s.%s.%s" % (word_lex[0], synset.lex_filenum, word_lex[1])
                          for word_lex in synset.words]
                 name = ' '.join(words)
-                synset.is_basic_type = True
-                synset.basic_type_name = name
+                synset.basic_type = name
                 synset.basic_types = {name}
                 self._basic_types[VERB].append(synset)
         for synset in self.basic_types(VERB):
@@ -316,9 +314,10 @@ class WordNet(object):
     def pp_basic_types(self, cat):
         basic_types = self.get_basic_types(cat)
         for bt in basic_types:
-            synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.is_basic_type]
-            super_types = set([ss.basic_type_name for ss in synsets])
-            super_types.remove(bt.basic_type_name)
+            synsets = [ss for ss in flatten(bt.paths_to_top())
+                       if ss.is_basic_type()]
+            super_types = set([ss.basic_type for ss in synsets])
+            super_types.remove(bt.basic_type)
             print(bt, ' '.join(super_types))
         print("\nNumber of basic types: %d\n" % len(basic_types))
 
@@ -351,8 +350,8 @@ class WordNet(object):
         return self._all_relations
 
     def get_all_basic_type_relations(self, cat):
-        """Return a list of 5-tuples of the form <basic_type_name, pointer_symbol,
-        basic_type_name, source_synset, target_synset>. There is at least one
+        """Return a list of 5-tuples of the form <basic_type, pointer_symbol,
+        basic_type, source_synset, target_synset>. There is at least one
         tuple for each relation amongst nominal synsets with the synsets
         replaced by the name of the basic types. If one of the synsets has two
         or more basic types, then a basic type relation will be created for each
@@ -380,11 +379,12 @@ class WordNet(object):
         types. Results from this can be hand-fed into the cltypes module."""
         pairs = []
         for bt in self.get_basic_types(NOUN):
-            synsets = [ss for ss in flatten(bt.paths_to_top()) if ss.is_basic_type]
-            super_types = set([ss.basic_type_name for ss in synsets])
-            super_types.remove(bt.basic_type_name)
+            synsets = [ss for ss in flatten(bt.paths_to_top())
+                       if ss.is_basic_type()]
+            super_types = set([ss.basic_type for ss in synsets])
+            super_types.remove(bt.basic_type)
             for st in super_types:
-                pairs.append((bt.basic_type_name, st))
+                pairs.append((bt.basic_type, st))
         for pair in sorted(set(pairs)):
             print("%s," % str(pair), end='')
         print(len(pairs), len(set(pairs)))
@@ -413,28 +413,17 @@ class Synset(object):
     def __init__(self, wordnet, line, cat):
         """Initialize a synset by parsing the line in the data file. We are using the
         byte offset of the line as the synset identifier."""
-
         self.wn = wordnet
         self.cat = cat
         self.line = line
-
-        # Default is that a synset is not a basic type, when we use basic types
-        # then this default needs to be overwritted.
-        # basic type.
-        self.is_basic_type = False
-        # If a synset is a basic type then the name of the type is stored here.
-        self.basic_type_name = None
-        # If used, this will contain the basic type names for this synset, this
-        # would include a basic type from a synset higher in the synset
-        # tree. Note that due to multiple inheritance there can be more than one
-        # basic type here.
-        self.basic_types = set()
-
+        self.basic_type = None    # name of basic type
+        self.basic_types = set()  # set of basic type and inherited basic types
         try:
-            fields, gloss = line.split('|')
+            fields, gloss = self.line.split('|')
             self.gloss = gloss.strip()
         except ValueError:
-            fields = line
+            # WordNet 1.5 does not always have a gloss
+            fields = self.line
             self.gloss = None
         fields = fields.strip().split()
         self.id = fields.pop(0)
@@ -442,26 +431,32 @@ class Synset(object):
         self.ss_type = fields.pop(0)
         self.p_cnt = None
         self.w_cnt = None
-        self.words = None
-        self.pointers = None
-        self._parse_words(fields)      # sets self.w_cnt and self.words list
-        self._parse_pointers(fields)   # sets self.p_cnt and self.pointers dictionary
+        self.words = None              # list of words
+        self.pointers = None           # dictionary of pointers
+        self._parse_words(fields)      # sets self.w_cnt and self.words
+        self._parse_pointers(fields)   # sets self.p_cnt and self.pointers
         self.fields = fields
         self.validate()
 
-
     def __str__(self):
         words = self.words_as_string()
-        basic_type = ' %s' % self.basic_type_name if self.is_basic_type else ''
+        basic_type = ' %s' % self.basic_type if self.is_basic_type() else ''
         return "<Synset %s %s %s%s>" % (self.id, self.ss_type, words, basic_type)
+
+    def is_basic_type(self):
+        return self.basic_type is not None
+
+    def reset_basic_types(self):
+        self.basic_type = None
+        self.basic_types = set()
 
     def as_html(self):
         # currently not printing the synset identifier or the castegory
         words = ' '.join(["<span class=blue>%s</span>.%s.%s"
                           % (word_lex[0], self.lex_filenum, word_lex[1])
                           for word_lex in self.words])
-        if self.is_basic_type:
-            basic_type = '*' + self.basic_type_name
+        if self.is_basic_type():
+            basic_type = '*' + self.basic_type
         else:
             basic_type = ' '.join(self.basic_types)
         return "%s <span class=green>%s</span>" % (words, basic_type)
@@ -476,7 +471,7 @@ class Synset(object):
     def as_formatted_string(self):
         words = ' '.join(["%s.%s.%s" % (blue(word_lex[0]), self.lex_filenum, word_lex[1])
                           for word_lex in self.words])
-        basic_type = ' %s' % green('*' + self.basic_type_name) if self.is_basic_type else ''
+        basic_type = ' %s' % green('*' + self.basic_type) if self.is_basic_type() else ''
         if not basic_type:
             basic_type = ' ' + green(' '.join(self.basic_types))
         # return "%s %s" % (self.id, words)
@@ -522,9 +517,8 @@ class Synset(object):
 
     def make_basic_type(self, name):
         """Make the synset a basic type by changing the value of the basic_type instance
-        variable from False to the name of the type."""
-        self.is_basic_type = True
-        self.basic_type_name = name
+        variable from None to the name of the type."""
+        self.basic_type = name
 
     def _parse_words(self, fields):
         # this first field should be a hexadecimal string of length 2
@@ -616,7 +610,7 @@ class Synset(object):
         as an argument is not the basic type itself (since a basic type can contain
         more than one synset), but that it stores the name of the basic type in
         one of its variables."""
-        self.basic_types.add(synset.basic_type_name)
+        self.basic_types.add(synset.basic_type)
         for hyponym in self.hyponyms():
             hyponym.add_basic_type(synset)
 
