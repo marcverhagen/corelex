@@ -39,6 +39,11 @@ def flatten(some_list):
     return result
 
 
+# for use in functools.reduce
+def union(x1, x2):
+    return x1.union(x2)
+
+
 # for more color codes see
 # https://gist.github.com/chrisopedia/8754917
 

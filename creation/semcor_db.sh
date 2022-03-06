@@ -32,7 +32,7 @@ elapsed="$(($end_time-$start_time))"
 echo "Time elapsed so far: $elapsed seconds"
 
 echo "Running: sh sdparse.sh semcor"
-sh sdparse.sh semcor
+sh parser/sdparse.sh semcor
 
 end_time="$(date -u +%s)"
 elapsed="$(($end_time-$start_time))"

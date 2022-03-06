@@ -14,7 +14,7 @@ The following scripts are used:
 
 ````
 semcor_db.sh
-sdparse.sh
+parser/sdparse.sh
 parser/stanford-nndep-wrapper-1.0-SNAPSHOT-fatjar.jar
 semcor_parse.py
 semcor_cl.py
@@ -47,7 +47,7 @@ The following scripts and file are used:
 
 ````
 semcor_db.py
-semcor_db.py
+semcor_cl.py
 wordnet.py
 data/semcor/semcor.db
 ````

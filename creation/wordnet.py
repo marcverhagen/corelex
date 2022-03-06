@@ -43,11 +43,12 @@ Getting the synset object given a synset identifier:
 import sys
 import copy
 import textwrap
+from functools import reduce
 
 import cltypes
 from config import WORDNET_DIR
 from utils import flatten, blue, green, bold, boldgreen
-from utils import index_file, data_file, sense_file
+from utils import union, index_file, data_file, sense_file
 
 
 if sys.version_info.major < 3:
@@ -235,6 +236,12 @@ class WordNet(object):
     def get_basic_types(self, cat):
         """return all synsets that are basic types."""
         return [ss for ss in self.get_all_synsets(cat) if ss.is_basic_type()]
+
+    def get_basic_types_for_noun(self, noun):
+        """Get a set of all the basic types for the noun lemma."""
+        synsets = self.get_noun(noun).synsets
+        sets = [self.get_synset('noun', ss).basic_types for ss in synsets]
+        return reduce(union, sets)
 
     def reset_nominal_basic_types(self):
         for synset in self._synset_idx[NOUN].values():
