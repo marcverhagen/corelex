@@ -1,77 +1,60 @@
 """corelex.py
 
-Script to create CoreLex from WordNet.
+Script to create Corelex from WordNet.
 
 Usage:
 
-   $ python3 corelex.py --create-cltype-files <version>
-   $ python3 corelex.py --btyperels <version>
-   $ python3 corelex.py --sql <version>
+   $ python3 corelex.py --create-types <version>
+   $ python3 corelex.py --create-relations <version>
+   $ python3 corelex.py --export-sql <version>
 
    where <version> is WordNet version 1.5 or 3.1
 
 
-==> Creating CoreLex files from WordNet
+==> Creating Corelex files from WordNet
 
-For example, to create CoreLex types for lemmas in WordNet 1.5:
+For example, to create Corelex types for lemmas in WordNet 3.1:
 
-   $ python3 corelex.py --create-cltype-files 3.1
+   $ python3 corelex.py --create-types 3.1
 
-This loads WordNet 3.1 using the wordnet.py module and then creates six files:
+See the documentation string on TypeGenerator for more information on what files
+are created.
 
-   data/corelex-2.0-cltypes-nouns.tab
-   data/corelex-2.0-cltypes-nouns.txt
-   data/corelex-2.0-cltypes-verbs.tab
-   data/corelex-2.0-cltypes-verbs.txt
-   data/corelex-2.0-nouns.tab
-   data/corelex-2.0-verbs.tab
-
-Note that the WordNet version is not the same as the CoreLex version. In this
-case we used WordNet 3.1 and we created CoreLex 2.0, which was specified by the
+Note that the WordNet version is not the same as the Corelex version. In this
+case we used WordNet 3.1 and we created Corelex 2.0, which was specified by the
 CORELEX_VERSION global variable, which is taken from the ../VERSION file. If we
-had used WordNet 1.5 then we would have created CoreLex x.x. See the comment
+had used WordNet 1.5 then we would have created Corelex x.x. See the comment
 just above the CORELEX_VERSION variable for more on this.
-
-The cltypes files contain mappings from cltypes (or rather, polysemous types) to
-lemmas. The cltypes tab files can later be used to load CoreLex, the cltypes txt
-files contain the same data but are easier on the eye. Thelemma files have the
-reverse mappings, from lemmas to cltypes.
 
 
 ==> Creating basic types relations from WordNet
 
-   $ python3 corelex.py --btyperels <version>
+   $ python3 corelex.py --create-relations <version>
 
 This reads the specified WordNet version and creates two files and a directory:
 
-   data/corelex-<version>-nouns-basic-type-relations.txt
-   data/corelex-<version>-nouns-relations.txt
-   directory data/corelex-<version>-nouns-basic-type-relations/
+   data/corelex-<version>-relations-nouns-all.txt
+   data/corelex-<version>-relations-nouns-basic-types.txt
+   data/corelex-<version>-relations-nouns-basic-types/
 
-The first file contains counts of the relations expressed between basic types
-and the second contains all relations with both the basic types and the
-identifiers for the source and target synsets. The index file in the directory
-contains a table with only the significant relations expressed between basic
-types, where significant is determined using some version of the chi-square
-test. The rest of the directory contains html pages with more comprehensive
-views of the relations.
+See the docstring in create_relations() for a description of what is in these files.
 
 This is experimental and it only works for nouns.
 
 
-==> Exporting CoreLex as SQL files
+==> Exporting Corelex as SQL files
 
 This assumes that the corelex-<version>-nouns.tab file has been created.
 
-   $ python3 corelex.py --sql 1.5
+   $ python3 corelex.py --export-sql 3.1
 
 This creates two files:
 
-   sql/corelex-1.5-basic-types-nouns.sql
-   sql/corelex-1.5-lemmas-nouns.sql
+   sql/corelex-3.1-basic-types-nouns.sql
+   sql/corelex-3.1-lemmas-nouns.sql
 
-These can be imported into the database of the online CoreLex browser. Note that
-we do not create a table for CoreLex types.
+These can be imported into the database of the online Corelex browser. Note that
+we do not create a table for Corelex types.
 
 NOTE: this is broken at the moment
 
@@ -90,38 +73,49 @@ from utils import index_file, data_file, flatten, bold
 from statistics import Distribution, ChiSquaredCell
 
 
-# The versioning is a bit tricky. The old legacy CoreLex has no number, so we
+### Versioning
+
+# The versioning is a bit tricky. The old legacy Corelex has no number, so we
 # just call it version 1.0. It is created from WordNet 1.5 and is similar but
-# not identical to the legacy CoreLex. There will most likely be no attempts to
+# not identical to the legacy Corelex. There will most likely be no attempts to
 # created a verson 1.1. This code also creates version 2.0 and higher. We
-# stipulate that CoreLex 2.0 is created from WordNet 3.1.
+# stipulate that Corelex 2.0 is created from WordNet 3.1.
 
 CORELEX_VERSION = open("../VERSION").read().strip()
 
-
-### Top-level methods that are executed driven by user flags
-
-def create_lemma_to_cltype_files(wordnet):
-    """Create CoreLex files from the given WordNet version."""
-    CoreLexTypeGenerator(wordnet, category=NOUN)
-    CoreLexTypeGenerator(wordnet, category=VERB)
+def get_corelex_version(wn_version):
+    return '1.0' if wn_version == '1.5' else CORELEX_VERSION
 
 
-def create_basic_type_relations(wn, version, category):
+
+### Top-level methods that are executed driven by command line options
+
+def create_types(wordnet):
+    """Create Corelex types from the given WordNet version and write the results
+    to a couple of files."""
+    TypeGenerator(wordnet, category=NOUN)
+    TypeGenerator(wordnet, category=VERB)
+
+
+def create_relations(wn, version, category):
 
     """Collect all relations and then turn them into relations between basic
     types. Store the relations not as individual relations but as a relation
     signature between basic types, where the signature specifies how many
     relations of a given type occur between the two synsets. Output created:
 
-       data/corelex-VERSION-CATEGORY-relations.txt
-       data/corelex-VERSION-CATEGORY-basic-type-relations.txt
-       data/corelex-VERSION-CATEGORY-basic-type-relations/
+       data/corelex-VERSION-relations-CATEGORY-all.txt
+       data/corelex-VERSION-relations-CATEGORY-basic-types.txt
+       data/corelex-VERSION-relations-CATEGORY-basic-types/
 
     The first has all relations as 5-tuples with basic types, pointers and the
     identifiers of the source and target synsets. The second is a summary file
     that has the relation signatures between basic type pairs. The directory
-    contains an html export of relation types between basic types."""
+    contains an html export of relation types between basic types. The index
+    file in the directory contains a table with only the significant relations
+    expressed between basic types, where significant is determined using some
+    version of the chi-square test. The rest of the directory contains html
+    pages with more comprehensive views of the relations."""
 
     # collecting relations and relation signatures
     bt_relations = wn.get_all_basic_type_relations(NOUN)
@@ -129,8 +123,8 @@ def create_basic_type_relations(wn, version, category):
 
     # writing results
     c = expand(category)
-    relations = 'data/corelex-%s-%ss-relations.txt' % (CORELEX_VERSION, c)
-    basicrels = 'data/corelex-%s-%ss-basic-type-relations.txt' % (CORELEX_VERSION, c)
+    relations = 'data/corelex-%s-relations-%ss-all.txt' % (CORELEX_VERSION, c)
+    basicrels = 'data/corelex-%s-relations-%ss-basic-types.txt' % (CORELEX_VERSION, c)
     with open(relations, 'w') as fh:
         for bt_relation in bt_relations:
             source = bt_relation[3]
@@ -160,8 +154,8 @@ def scratch(version):
 
 ### Utilities
 
-def get_corelex_version(wn_version):
-    return '1.0' if wn_version == '1.5' else CORELEX_VERSION
+def corelex_type_file(corelex_version='2.0', category='noun', extension='tab'):
+    return "data/corelex-%s-types-%ss.%s" % (corelex_version, category, extension)
 
 
 def get_basic_types(synsets):
@@ -191,7 +185,7 @@ def filter_basic_types(set_of_basic_types, type_relations):
 
 def print_usage():
     print("\nUsage:\n",
-          "   $ python3 corelex.py --create-cltype-files <version>\n",
+          "   $ python3 corelex.py --create-type-files <version>\n",
           "   $ python3 corelex.py --btyperels1 <version>\n",
           "   $ python3 corelex.py --sql <version> <category>\n")
 
@@ -217,29 +211,23 @@ def _create_basic_type_relations_summary(bt_relations):
     return bt_relation_index
 
 
-class CoreLexTypeGenerator(object):
+class TypeGenerator(object):
 
-    """This class is used to generate the mappings from lemmas to polysemous types
-    and corelex types. These mappings can then later be loaded into an instance of
-    the CoreLex class. It creates the following files:
+    """Generate polysemous types and corelex types for all lemmas. These types can
+    then later be loaded into an instance of the Corelex class. It creates the
+    following files:
 
-       data/corelex-VERSION-cltypes-nouns.tab
-       data/corelex-VERSION-cltypes-nouns.txt
-       data/corelex-VERSION-cltypes-verbs.tab
-       data/corelex-VERSION-cltypes-verbs.txt
-       data/corelex-VERSION-nouns.tab
-       data/corelex-VERSION-verbs.tab
+       data/corelex-VERSION-types-nouns.tab
+       data/corelex-VERSION-types-nouns.txt
+       data/corelex-VERSION-types-verbs.tab
+       data/corelex-VERSION-types-verbs.txt
 
-    The tab files are read into CoreLex and the txt files contain the same data
-    but more pleasant to the eye.
+    These files contain mappings from type signatures (which are basic types or
+    polysemous types) to lemmas. The tab files can later be used to load Corelex
+    and the txt files contain the same data but are easier on the eye.
 
     Several additional files for nouns and verbs (n, v) are generated by the
-    methods:
-
-       self._create_nv_clpairs(category)
-       self.write_nv_clpairs(category)
-
-    These are
+    methods create_nv_clpairs(category) and write_nv_clpairs(category):
 
        data/corelex-2.0-class_pair-nouns-all.tab
        data/corelex-2.0-lemma_pair-nouns-all.tab
@@ -249,25 +237,25 @@ class CoreLexTypeGenerator(object):
        data/corelex-2.0-class_pair_glosses-verbs-all.tab
 
     These files capture information about pairs of senses for the same lemma
-    (noun or verb).  Each line of the class_pair files shows a pair of
-    basic_type classes, along with all lemmas (and their sense pairs) which map
-    to this combination of basic types.  The number of lemma/sense pairs for the
-    compound basic type is used to sort the lines, such that the most common
-    pairs are listed first.
+    (noun or verb). Each line of the class_pair files shows a pair of basic_type
+    classes, along with all lemmas (and their sense pairs) which map to this
+    combination of basic types. The number of lemma/sense pairs for the compound
+    basic type is used to sort the lines, such that the most common pairs are
+    listed first.
 
     Each line of the glosses files contains a basic_type pair and one associated
-    lemma/sense pair, along with the wordnet glosses for the two senses.  This
+    lemma/sense pair, along with the wordnet glosses for the two senses. This
     allows us to examine the "meanings" associated with senses for the same
     lemma. Like the class_pair files, lines are sorted by the number of
-    lemma/sense pairs for the compound basic type.  Thus the most common pairs
-    appear first.  To make it easy to browse the file in an editor, an extra
-    field is added to the first line for each new basic_type pair.  The field
-    consists of /n<sequence number>/.  Searching for "/n" will advance you to
-    the next basic_type pair.  Using the sequence number, you can jump the to
-    the first line for the nth pair.
+    lemma/sense pairs for the compound basic type. Thus the most common pairs
+    appear first. To make it easy to browse the file in an editor, an extra
+    field is added to the first line for each new basic_type pair. The field
+    consists of /n<sequence number>/. Searching for "/n" will advance you to the
+    next basic_type pair. Using the sequence number, you can jump the to the
+    first line for the nth pair.
 
     Each line of the lemma_pair files contains a lemma/sense pair and its
-    associated pair of basic types.  This allows us to examine all compound
+    associated pair of basic types. This allows us to examine all compound
     basic classes for a given lemma.
 
     """
@@ -284,23 +272,13 @@ class CoreLexTypeGenerator(object):
         self.wn_lemma_idx = self.wordnet.lemma_index()
         self.wn_synset_idx = self.wordnet.synset_index()
         if category == NOUN:
-            self._create_noun_cltypes()
-            self.pp_nouns()
+            self.create_noun_types()
             self.write_nouns()
         elif category == VERB:
-            self._create_verb_cltypes()
-            self.pp_verbs()
+            self.create_verb_types()
             self.write_verbs()
-        self._create_nv_clpairs(category)
+        self.create_nv_clpairs(category)
         self.write_nv_clpairs(category)
-
-    def corelex_cltype_file(self, category, extension='tab'):
-        return "data/corelex-%s-cltypes-%ss.%s" \
-            % (self.cl_version, category, extension)
-
-    def corelex_lemma_file(self, category, extension='tab'):
-        return "data/corelex-%s-lemmas-%ss.%s" \
-            % (self.cl_version, category, extension)
 
     def corelex_class_pair_file(self, category, extension='tab'):
         return "data/corelex-%s-class_pair-%ss-all.%s" \
@@ -314,24 +292,22 @@ class CoreLexTypeGenerator(object):
         return "data/corelex-%s-class_pair_glosses-%ss-all.%s" \
             % (self.cl_version, category, extension)
 
-    def _create_noun_cltypes(self):
-        # type_relations = self._get_type_relations()
-        for lemma in sorted(self.wn_lemma_idx[NOUN].keys()):
-            word = self.wordnet.get_noun(lemma)
-            synsets = [self.wordnet.get_noun_synset(synset) for synset in word.synsets]
-            basic_types = get_basic_types(synsets)
-            corelex_class = ' '.join(sorted(basic_types))
-            self.lemma_index[word] = corelex_class
-            self.class_index.setdefault(corelex_class, []).append(word)
+    def create_noun_types(self):
+        self.create_types(NOUN, separator='.')
 
-    def _create_verb_cltypes(self):
-        for lemma in sorted(self.wn_lemma_idx[VERB].keys()):
-            word = self.wordnet.get_verb(lemma)
-            synsets = [self.wordnet.get_synset(VERB, synset) for synset in word.synsets]
+    def create_verb_types(self):
+        self.create_types(VERB, separator=' * ')
+
+    def create_types(self, cat, separator='.'):
+        for lemma in sorted(self.wn_lemma_idx[cat].keys()):
+            word = self.wordnet.get_word(lemma, cat)
+            synsets = [self.wordnet.get_synset(cat, synset) for synset in word.synsets]
             basic_types = get_basic_types(synsets)
-            corelex_class = ' * '.join(sorted(basic_types))
+            corelex_class = separator.join(sorted(basic_types))
             self.lemma_index[lemma] = corelex_class
-            self.class_index.setdefault(corelex_class, []).append(lemma)
+            # TODO: we now put the Word in the index, do the lemma instead?
+            # TODO: make the index specific to the category
+            self.class_index.setdefault(corelex_class, []).append(word)
 
     def _create_verb_clpairs(self):
         """Create paired types for verbs (PGA)."""
@@ -379,7 +355,7 @@ class CoreLexTypeGenerator(object):
                 (class_part, lemma_part) = class_pair.split("\t")
                 self.class_pair_index.setdefault(class_part, []).append(lemma_part)
 
-    def _create_nv_clpairs(self, category):
+    def create_nv_clpairs(self, category):
         for lemma in sorted(self.wn_lemma_idx[category].keys()):
             if category == VERB:
                 word = self.wordnet.get_verb(lemma)
@@ -440,27 +416,22 @@ class CoreLexTypeGenerator(object):
         return cltypes.BASIC_TYPES_ISA_RELATIONS_3_1
 
     def write_nouns(self):
-        filename1 = self.corelex_cltype_file(NOUN, 'tab')
-        filename2 = self.corelex_lemma_file(NOUN, 'tab')
-        print("Writing", filename1)
-        with open(filename1, 'w') as fh:
-            for cl_class in sorted(self.class_index.keys()):
-                lemmas = [w.lemma for w in self.class_index[cl_class]]
-                fh.write("%s\t%s\n" % (cl_class, ' '.join(lemmas)))
-        print("Writing", filename2)
-        with open(filename1) as fh1, open(filename2, 'w') as fh2:
-            lemma_list = []
-            for line in fh1:
-                cltype, lemmas = line.strip().split("\t")
-                for lemma in lemmas.split():
-                    lemma_list.append("%s\t%s\n" % (lemma, cltype))
-            for lemma in sorted(lemma_list):
-                fh2.write(lemma)
+        filename1 = corelex_type_file(self.cl_version, NOUN, 'tab')
+        filename2 = corelex_type_file(self.cl_version, NOUN, 'txt')
+        self._write_nountypes_tab(filename1)
+        self._write_nountypes_txt(filename2)
 
-    def pp_nouns(self):
-        filename = self.corelex_cltype_file(NOUN, 'txt')
-        print("Writing", filename)
-        fh = open(filename, 'w')
+    def _write_nountypes_tab(self, fname):
+        print("Writing", fname)
+        with open(fname, 'w') as fh:
+            # the index maps type signatures to lists of wordnet.Word instances
+            for type_signature in sorted(self.class_index.keys()):
+                lemmas = [w.lemma for w in self.class_index[type_signature]]
+                fh.write("%s\t%s\n" % (type_signature, ' '.join(lemmas)))
+
+    def _write_nountypes_txt(self, fname):
+        print("Writing", fname)
+        fh = open(fname, 'w')
         tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
         for cl_class in sorted(self.class_index.keys()):
             fh.write("%s\n\n" % cl_class)
@@ -470,23 +441,34 @@ class CoreLexTypeGenerator(object):
             fh.write("\n")
 
     def write_verbs(self):
-        filename1 = self.corelex_cltype_file(VERB, 'tab')
-        filename2 = self.corelex_lemma_file(VERB, 'tab')
-        print("Writing", filename1)
-        with open(filename1, 'w') as fh:
-            for cl_class in sorted(self.class_index.keys()):
-                if '*' in cl_class and len(self.class_index[cl_class]) > 4:
-                    fh.write("%s\t%s\n" % (cl_class, ' '.join(self.class_index[cl_class])))
-        print("Writing", filename2)
-        with open(filename1) as fh1, open(filename2, 'w') as fh2:
-            lemma_list = []
-            for line in fh1:
-                cltype, lemmas = line.strip().split("\t")
-                for lemma in lemmas.split():
-                    lemma_list.append("%s\t%s\n" % (lemma, cltype))
-            for lemma in sorted(lemma_list):
-                fh2.write(lemma)
+        filename1 = corelex_type_file(self.cl_version, VERB, 'tab')
+        filename2 = corelex_type_file(self.cl_version, VERB, 'txt')
+        self._write_verbtypes_tab(filename1)
+        self._write_verbtypes_txt(filename2)
 
+    def _write_verbtypes_tab(self, fname):
+        print("Writing", fname)
+        with open(fname, 'w') as fh:
+            for type_signature in sorted(self.class_index.keys()):
+                lemmas = [w.lemma for w in self.class_index[type_signature]]
+                fh.write("%s\t%s\n" % (type_signature, ' '.join(lemmas)))
+
+    def _write_verbtypes_txt(self, fname):
+        print("Writing", fname)
+        fh = open(fname, 'w')
+        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
+        for cl_class in sorted(self.class_index.keys()):
+            # TODO: maybe do same kind of check for the others?
+            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
+                fh.write("%s\n\n" % cl_class)
+                lemmas = [w.lemma for w in self.class_index[cl_class]]
+                for line in tw.wrap(' '.join(lemmas)):
+                    fh.write(line + "\n")
+                fh.write("\n")
+
+
+
+        
     """
     Create .tab files for lemmas and paired classes regardless of size of class.  We will
     use this data to create paired_classes, lemmas along with any pairs of basic
@@ -655,80 +637,104 @@ n let up after a few hours"     make less active or intense
                         fh3.write("\n")
 
 
-    def pp_verbs(self):
-        filename = self.corelex_cltype_file(VERB, 'txt')
-        print("Writing", filename)
-        fh = open(filename, 'w')
-        tw = textwrap.TextWrapper(width=80, initial_indent="  ", subsequent_indent="  ")
-        for cl_class in sorted(self.class_index.keys()):
-            if '*' in cl_class and len(self.class_index[cl_class]) > 4:
-                fh.write("%s\n\n" % cl_class)
-                for line in tw.wrap(' '.join(self.class_index[cl_class])):
-                    fh.write(line + "\n")
-                fh.write("\n")
+class CorelexStatistics(object):
 
+    """Store, update and print some statistics."""
     
-class CoreLex(object):
+    def __init__(self):
+        self.total = 0
+        self.is_singleton = 0
+        self.has_cltype = 0
+        self.no_cltype = 0
 
-    def __init__(self, version='3.1', category=NOUN, wordnet=None):
+    def update(self, lemma, type_signature, corelex_type):
+        if ' ' in type_signature:
+            print(lemma, ':', type_signature, '-->', corelex_type)
+        self.total += 1
+        if ' ' not in type_signature:
+            self.is_singleton += 1
+        if corelex_type == '-':
+            self.no_cltype += 1
+        else:
+            self.has_cltype += 1
+
+    def pp(self):
+        def formatted(n):
+            return "%8s" % "{:,}".format(n)
+        singletons = formatted(self.is_singleton)
+        polysemous = formatted(self.total - self.is_singleton)
+        with_mapping = formatted(self.has_cltype - self.is_singleton)
+        no_mapping = formatted(self.no_cltype)
+        print("\nLoaded %d lemmas from semcor\n" % self.total)
+        print("  lemmas with a singleton type:           %s" % singletons)
+        print("  lemmas with a polysemous type:          %s" % polysemous)
+        print("  lemmas with mapping to corelex type:    %s" % with_mapping)
+        print("  lemmas without mapping to corelex type: %s\n" % no_mapping)
+
+
+class Corelex(object):
+
+    def __init__(self, version='2.0', category=NOUN, wordnet=None):
         self.category = expand(category)
         self.version = version
+        self.stats = CorelexStatistics()
         self.lemma_index = {}
         self.class_index = {}
-        self.corelex_type_to_class = {}
-        self.class_to_corelex_type = {}
-        self._load_corelex_types()
+        self.corelex_types = cltypes.CORELEX_TYPES
+        self.polysemous_types = {}
+        self._populate_polysemous_types()
         self._load_corelex()
 
-    def _load_corelex_types(self):
-        """Load the corelex types from the cltypes module."""
-        for cltype, classes in cltypes.CORELEX_TYPES.items():
-            self.corelex_type_to_class[cltype] = classes
-            for class_ in classes:
-                self.class_to_corelex_type[class_] = cltype
+    def __str__(self):
+        return "<Corelex cltypes=%d potypes=%d classes=%d lemmas=%d>" \
+            % (len(self.corelex_types), len(self.polysemous_types),
+               len(self.class_index), len(self.lemma_index))
+
+    def _populate_polysemous_types(self):
+        """Create mappings from polysemous type to corelx types, basically
+        inverting the corelex_types index."""
+        for cltype, ptypes in self.corelex_types.items():
+            for ptype in ptypes:
+                self.polysemous_types[ptype] = cltype
+        #self.pp_polysemous_types()
 
     def _load_corelex(self):
-        data_file = "data/corelex-%s-%ss.tab" % (self.version, self.category)
+        # this file has each lemma mapped to a basic type or polysemous type
+        data_file = "data/corelex-%s-lemmas-%ss.tab" % (self.version, self.category)
         with open(data_file) as fh:
             for line in fh:
-                corelex_class, words = line.strip().split("\t")
-                for word in words.split():
-                    self.lemma_index[word] = corelex_class
-                    self.class_index.setdefault(corelex_class, []).append(word)
-            print("Loaded %d words and %d CoreLex classes\n"
-                  % (len(self.lemma_index), len(self.class_index)))
+                lemma, type_signature = line.strip().split("\t")
+                corelex_type = self.polysemous_types.get(type_signature, '-')
+                self.stats.update(lemma, type_signature, corelex_type)
+                self.lemma_index[lemma] = (corelex_type, type_signature)
+        self.stats.pp()
 
-    def write_tables(self):
-        basic_types_sql = "sql/corelex-%s-basic-types-%ss.sql" \
-                          % (self.version, self.category)
+    def export_sql(self):
+        btypes_sql = "sql/corelex-%s-btypes-%ss.sql" % (self.version, self.category)
         nouns_sql = "sql/corelex-%s-lemmas-%ss.sql" % (self.version, self.category)
-        if self.version == "1.5":
-            basic_types = cltypes.BASIC_TYPES_1_5
-        else:
-            basic_types = cltypes.BASIC_TYPES_3_1
-        bt_table = open(basic_types_sql, 'w')
-        string_buffer = io.StringIO()
-        bt_table.write("INSERT INTO basic_types " +
-                       "(basic_type, synset_number, synset_elements) VALUES\n")
+        basic_types = cltypes.get_basic_types(self.version)
+        # Collecting basic types in a buffer which makes it easy to change the
+        # end of the final insert from a comma into a semi-colon
+        btypes_buffer = io.StringIO()
+        btypes_buffer.write("INSERT INTO basic_types " +
+                            "(basic_type, synset_number, synset_elements) VALUES\n")
         for btype in sorted(basic_types):
             for synset_number, synset_elements in basic_types[btype]:
-                string_buffer.write("   ('%s', %d, '%s'),\n"
+                btypes_buffer.write("   ('%s', %d, '%s'),\n"
                                     % (btype, int(synset_number), synset_elements))
-        bt_table.write(string_buffer.getvalue()[:-2] + ";\n")
-        bt_table.close()
-        string_buffer.close()
+        with open(btypes_sql, 'w') as fh:
+            fh.write(btypes_buffer.getvalue()[:-2] + ";\n")
         noun_table = open(nouns_sql, 'w')
         string_buffer = io.StringIO()
-        noun_table.write("INSERT INTO nouns (noun, corelex_type, polysemous_type) VALUES\n")
-        for word in self.lemma_index:
-            pclass = self.lemma_index[word]
-            cltype = self.class_to_corelex_type.get(pclass, '-')
+        noun_table.write("INSERT INTO nouns (noun, corelex_type, type_signature) VALUES\n")
+        for lemma in self.lemma_index:
+            cltype, potype = self.lemma_index.get(lemma, ('-', '-'))
             string_buffer.write("   ('%s', '%s', '%s'),\n"
-                                % (word.replace("'", r"\'"), cltype, pclass))
+                                % (lemma.replace("'", r"\'"), cltype, potype))
         noun_table.write(string_buffer.getvalue()[:-2] + ";\n")
         noun_table.close()
-        print("Wrote %d types to file %s" % (len(basic_types), basic_types_sql))
-        print("Wrote %d words to file %s\n" % (len(self.lemma_index), nouns_sql))
+        print("Wrote %d basic types to %s" % (len(basic_types), btypes_sql))
+        print("Wrote %d lemmas to %s\n" % (len(self.lemma_index), nouns_sql))
 
     def pp_summary(self):
         total_count = 0
@@ -736,6 +742,10 @@ class CoreLex(object):
             total_count += len(self.class_index[cl_class])
             print("%s\t%d" % (cl_class, len(self.class_index[cl_class])))
         print("TOTAL\t%d" % total_count)
+
+    def pp_polysemous_types(self):
+        for ptype in sorted(self.polysemous_types):
+            print("[%-20s ==>  %s" % (ptype + ']', self.polysemous_types[ptype]))
 
 
 class BasicTypeRelations(object):
@@ -754,8 +764,8 @@ class BasicTypeRelations(object):
         """Read the relations between basic types from file and return the relations as
         a dictionary. Keys are pairs of basic relations, values are dictionaries of
         pointer symbols and their counts."""
-        fname = "data/corelex-%s-%ss-basic-type-relations.txt" \
-                % (self.version, expand(self.category))
+        fname = ("data/corelex-%s-relations-%ss-basic-types.txt"
+                 % (get_corelex_version(self.version), expand(self.category)))
         for line in open(fname):
             fields = line.strip().split("\t")
             types = fields.pop(0)
@@ -772,7 +782,8 @@ class BasicTypeRelations(object):
     def _read_relations(self):
         """Read all the relations from the data/corelex-VERSION-CATEGORY-relations.txt
         file and return them as a dictionary indexed on the basic type pair."""
-        fname = "data/corelex-%s-%ss-relations.txt" % (self.version, expand(self.category))
+        fname = ("data/corelex-%s-relations-%ss-all.txt"
+                 % (get_corelex_version(self.version), expand(self.category)))
         with open(fname) as fh:
             for line in fh:
                 fields = line.strip().split("\t")
@@ -815,7 +826,7 @@ class RelationsWriter(object):
 
     def __init__(self, basic_type_relations):
         self.btr = basic_type_relations
-        self.html_dir = "data/corelex-%s-%ss-basic-type-relations" \
+        self.html_dir = "data/corelex-%s-relations-%ss-basic-types" \
                         % (CORELEX_VERSION, expand(self.btr.category))
                         #% (self.btr.version, expand(self.btr.category))
         self.rels_dir = os.path.join(self.html_dir, 'rels')
@@ -943,17 +954,18 @@ if __name__ == '__main__':
     flag = sys.argv[1]
     version = sys.argv[2]
 
-    if flag == '--create-cltype-files':
+    if flag == '--create-types':
         wn = WordNet(version, add_basic_types=True)
-        create_lemma_to_cltype_files(wn)
+        create_types(wn)
 
-    elif flag == '--sql':
-        cl = CoreLex(version=version, category='n')
-        cl.write_tables()
-
-    elif flag == '--btyperels':
+    elif flag == '--create-relations':
         wn = WordNet(version, add_basic_types=True)
-        create_basic_type_relations(wn, version, 'n')
+        create_relations(wn, version, 'n')
+
+    elif flag == '--export-sql':
+        cl = Corelex(version=version, category='n')
+        print(cl)
+        cl.export_sql()
 
     elif flag == '-s':
         scratch(version)

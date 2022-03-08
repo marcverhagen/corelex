@@ -2,9 +2,9 @@
 
 The main modules in this directory do the following:
 
-- `wordnet.py` - give access to WordNet;
+- `wordnet.py` - access WordNet;
 - `corelex.py` - create CoreLex from WordNet;
-- `browse.py` - allow command-line browsing of WordNet and CoreLex.
+- `browse.py` - browse WordNet and CoreLex from the  command-line.
 
 
 
@@ -100,7 +100,7 @@ If you already had basic types added and want to replace them you need to reset 
 The `corelex.py` module creates a basic CoreLex from WordNet:
 
 ```bash
-$ python3 corelex.py --create-cltype-files <version>
+$ python3 corelex.py --create-types <version>
 ```
 
 For version you can use either `1.5` or `3.1`. When using version 1.5 you basically recreate something close to the old legacy CoreLex from 1998, with verbs added (but note that the verbs are still rather experimental). When using version 3.1 you create CoreLex 2.0.

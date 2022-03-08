@@ -210,18 +210,25 @@ class WordNet(object):
     def basic_types(self, cat=NOUN):
         return self._basic_types[cat]
 
+    def get_word(self, lemma, cat):
+        """Return None or the Word instance for the lemma of category cat."""
+        return self._lemma_idx[cat].get(lemma)
+
     def get_noun(self, lemma):
         """Return None or the Word instance for the noun."""
-        return self._lemma_idx[NOUN].get(lemma)
+        return self.get_word(lemma, NOUN)
 
     def get_verb(self, lemma):
         """Return None or the Word instance for the verb."""
-        return self._lemma_idx[VERB].get(lemma)
+        return self.get_word(lemma, VERB)
 
     def get_lemmas(self, lemma):
         """Return a dictionary with NOUN and VERB keys. The value of each key is
         a Word instance or None."""
         return {NOUN: self.get_noun(lemma), VERB: self.get_verb(lemma)}
+
+    def get_synset(self, category, synset_offset):
+        return self._synset_idx[category].get(synset_offset)
 
     def get_noun_synset(self, synset_offset):
         """Return the synset object for the synset identifier."""
@@ -229,9 +236,6 @@ class WordNet(object):
 
     def get_verb_synset(self, synset_offset):
         return self.get_synset(VERB, synset_offset)
-
-    def get_synset(self, category, synset_offset):
-        return self._synset_idx[category].get(synset_offset)
 
     def get_basic_types(self, cat):
         """return all synsets that are basic types."""
@@ -399,13 +403,14 @@ class WordNet(object):
 
 class Word(object):
 
-    """Used to store the synset identifiers that go with a lemma."""
+    """Used to store all the synset identifiers that go with a lemma. There is
+    a one-to-one correspondence between Word instances and lemmas (modulo the
+    category)."""
 
     def __init__(self, line):
+        """Create an instance from a line in the Wordnet index file."""
         self.fields = line.split()
         self.lemma = self.fields[0]
-        # this is more general since WordNet 1.5 and 3.1 differ in where the
-        # synset count is specified
         self.synsets = [f for f in self.fields if len(f) == 8 and f.isdigit()]
 
     def __str__(self):

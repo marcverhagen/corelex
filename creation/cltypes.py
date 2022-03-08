@@ -319,6 +319,8 @@ BASIC_TYPES_ISA_RELATIONS_3_1 = [
 ]
 
 
+# Each Corelex type is defined as a set of polysemous types.
+
 CORELEX_TYPES = {
 
     'abs': ['abs'],
@@ -483,6 +485,11 @@ def get_basic_types(version):
     if version == '1.5':
         return BASIC_TYPES_1_5
     elif version == '3.1':
+        return BASIC_TYPES_3_1
+    # The following two are a bit of a hack since we use corelex versions here.
+    elif version == '1.0':
+        return BASIC_TYPES_1_5
+    elif version == '2.0':
         return BASIC_TYPES_3_1
     else:
         print("WARNING: no basic types available for version", version)
