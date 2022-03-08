@@ -103,7 +103,7 @@ The `corelex.py` module creates a basic CoreLex from WordNet:
 $ python3 corelex.py --create-types <version>
 ```
 
-For version you can use either `1.5` or `3.1`. When using version 1.5 you basically recreate something close to the old legacy CoreLex from 1998, with verbs added (but note that the verbs are still rather experimental). When using version 3.1 you create CoreLex 2.0.
+For `<version>` you can use either `1.5` or `3.1`. When using version 1.5 you basically recreate something close to the old legacy CoreLex from 1998, with verbs added (but note that the verbs are still rather experimental). When using version 3.1 you create CoreLex 2.0.
 
 CoreLex 2.0 is different from CoreLex in that while it creates systematically polysemous types from WordNet, it does not yet implement a many-to-one mapping from those types to CoreLex types.
 

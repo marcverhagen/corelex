@@ -439,8 +439,8 @@ CORELEX_TYPES = {
     'prn': ['nat pro'],
     'pro': ['pro'],
     'prt': ['art fod prt', 'art frm prt', 'art prt', 'atr prt', 'atr prt sub',
-            'fod prt', 'frm prt',
-            'hum prt', 'nat prt', 'prt', 'prt qui', 'prt sta'],
+            'fod prt', 'frm prt', 'hum prt', 'nat prt',
+            'prt', 'prt qui', 'prt sta'],
     'psa': ['act art pos', 'art pos'],
     'psg': ['act grp psy', 'grp psy'],
     'psr': ['pos rel'],
@@ -464,7 +464,6 @@ CORELEX_TYPES = {
     'tme': ['sta tme', 'grp tme', 'phm tme', 'qud tme', 'tme'],
     'tmt': ['atr tme'],
     'tmv': ['act evt tme', 'act tme', 'evt tme']
-
 }
 
 

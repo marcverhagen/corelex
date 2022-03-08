@@ -9,10 +9,10 @@ class CorelexStatistics(object):
         self.no_cltype = 0
 
     def update(self, lemma, type_signature, corelex_type):
-        if ' ' in type_signature:
-            print(lemma, ':', type_signature, '-->', corelex_type)
+        #if '.' in type_signature:
+        #    print(lemma, ':', type_signature, '-->', corelex_type)
         self.total += 1
-        if ' ' not in type_signature:
+        if '.' not in type_signature:
             self.is_singleton += 1
         if corelex_type == '-':
             self.no_cltype += 1

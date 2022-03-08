@@ -5,20 +5,18 @@ from wordnet import expand, POINTER_SYMBOLS
 
 class RelationsWriter(object):
 
-    def __init__(self, corelex_version, basic_type_relations):
+    def __init__(self, corelex_version, basic_type_relations, output_dir):
         self.corelex_version = corelex_version
-        self.btr = basic_type_relations
-        self.html_dir = "data/corelex-%s-relations-%ss-basic-types" \
-                        % (self.corelex_version, expand(self.btr.category))
-                        #% (self.btr.version, expand(self.btr.category))
+        self.btrs = basic_type_relations
+        self.html_dir = output_dir % (self.corelex_version, expand(self.btrs.category))
         self.rels_dir = os.path.join(self.html_dir, 'rels')
         self.index_file = os.path.join(self.html_dir, "index.html")
-        self.basic_types = cltypes.get_basic_types(self.btr.version)
+        self.basic_types = cltypes.get_basic_types(self.btrs.wnversion)
 
     def write(self):
         self._ensure_directories()
         with open(self.index_file, 'w') as fh:
-            categories = self.btr.distribution.get_categories()
+            categories = self.btrs.distribution.get_categories()
             fh.write("<html>\n")
             self._write_head(fh)
             fh.write("<body>\n")
@@ -30,8 +28,8 @@ class RelationsWriter(object):
             for cat in categories:
                 fh.write("  <td width=30>%s</td>\n" % cat)
             fh.write("</tr>\n")
-            for pair in sorted(self.btr.btrels2):
-                cells = self.btr.btrels2[pair]
+            for pair in sorted(self.btrs.btrels2):
+                cells = self.btrs.btrels2[pair]
                 cell_categories = set([cell.category for cell in cells])
                 bt1, bt2 = pair
                 fh.write("<tr align=left>\n")
@@ -96,7 +94,7 @@ class RelationsWriter(object):
                 fh.write("<a name=%s></a>\n" % cell.category)
                 fh.write("<p>&bullet; %s  (%s)</p>\n"
                          % (POINTER_SYMBOLS.get(cell.category), cell.category))
-                rels = self.btr.allrels[name]
+                rels = self.btrs.allrels[name]
                 grouped_rels = {}
                 for rel in rels:
                     # If we skip this test we get a problem when, for example,
