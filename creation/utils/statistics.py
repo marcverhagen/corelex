@@ -1,3 +1,37 @@
+class CorelexStatistics(object):
+
+    """Store, update and print some statistics."""
+
+    def __init__(self):
+        self.total = 0
+        self.is_singleton = 0
+        self.has_cltype = 0
+        self.no_cltype = 0
+
+    def update(self, lemma, type_signature, corelex_type):
+        if ' ' in type_signature:
+            print(lemma, ':', type_signature, '-->', corelex_type)
+        self.total += 1
+        if ' ' not in type_signature:
+            self.is_singleton += 1
+        if corelex_type == '-':
+            self.no_cltype += 1
+        else:
+            self.has_cltype += 1
+
+    def pp(self):
+        def formatted(n):
+            return "%8s" % "{:,}".format(n)
+        singletons = formatted(self.is_singleton)
+        polysemous = formatted(self.total - self.is_singleton)
+        with_mapping = formatted(self.has_cltype - self.is_singleton)
+        no_mapping = formatted(self.no_cltype)
+        print("\nLoaded %d lemmas from semcor\n" % self.total)
+        print("  lemmas with a singleton type:           %s" % singletons)
+        print("  lemmas with a polysemous type:          %s" % polysemous)
+        print("  lemmas with mapping to corelex type:    %s" % with_mapping)
+        print("  lemmas without mapping to corelex type: %s\n" % no_mapping)
+
 
 class Distribution(object):
 

@@ -67,10 +67,11 @@ import io
 import itertools
 from operator import itemgetter
 
-from wordnet import WordNet, NOUN, VERB, POINTER_SYMBOLS, expand
 import cltypes
+from wordnet import WordNet, NOUN, VERB, expand
 from utils import index_file, data_file, flatten, bold
-from statistics import Distribution, ChiSquaredCell
+from utils.statistics import Distribution, ChiSquaredCell, CorelexStatistics
+from utils.html import RelationsWriter
 
 
 ### Versioning
@@ -143,7 +144,8 @@ def create_relations(wn, version, category):
     btr = BasicTypeRelations(wn, category)
     btr.calculate_distribution()
     btr.collect_significant_relations()
-    RelationsWriter(btr).write()
+    #RelationsWriter(btr).write()
+    RelationsWriter(CORELEX_VERSION, btr).write()
 
 
 def scratch(version):
@@ -637,41 +639,6 @@ n let up after a few hours"     make less active or intense
                         fh3.write("\n")
 
 
-class CorelexStatistics(object):
-
-    """Store, update and print some statistics."""
-    
-    def __init__(self):
-        self.total = 0
-        self.is_singleton = 0
-        self.has_cltype = 0
-        self.no_cltype = 0
-
-    def update(self, lemma, type_signature, corelex_type):
-        if ' ' in type_signature:
-            print(lemma, ':', type_signature, '-->', corelex_type)
-        self.total += 1
-        if ' ' not in type_signature:
-            self.is_singleton += 1
-        if corelex_type == '-':
-            self.no_cltype += 1
-        else:
-            self.has_cltype += 1
-
-    def pp(self):
-        def formatted(n):
-            return "%8s" % "{:,}".format(n)
-        singletons = formatted(self.is_singleton)
-        polysemous = formatted(self.total - self.is_singleton)
-        with_mapping = formatted(self.has_cltype - self.is_singleton)
-        no_mapping = formatted(self.no_cltype)
-        print("\nLoaded %d lemmas from semcor\n" % self.total)
-        print("  lemmas with a singleton type:           %s" % singletons)
-        print("  lemmas with a polysemous type:          %s" % polysemous)
-        print("  lemmas with mapping to corelex type:    %s" % with_mapping)
-        print("  lemmas without mapping to corelex type: %s\n" % no_mapping)
-
-
 class Corelex(object):
 
     def __init__(self, version='2.0', category=NOUN, wordnet=None):
@@ -820,133 +787,6 @@ class BasicTypeRelations(object):
                     cells.append(cell)
             if cells:
                 self.btrels2[pair] = cells
-
-
-class RelationsWriter(object):
-
-    def __init__(self, basic_type_relations):
-        self.btr = basic_type_relations
-        self.html_dir = "data/corelex-%s-relations-%ss-basic-types" \
-                        % (CORELEX_VERSION, expand(self.btr.category))
-                        #% (self.btr.version, expand(self.btr.category))
-        self.rels_dir = os.path.join(self.html_dir, 'rels')
-        self.index_file = os.path.join(self.html_dir, "index.html")
-        self.basic_types = cltypes.get_basic_types(self.btr.version)
-
-    def write(self):
-        self._ensure_directories()
-        with open(self.index_file, 'w') as fh:
-            categories = self.btr.distribution.get_categories()
-            fh.write("<html>\n")
-            self._write_head(fh)
-            fh.write("<body>\n")
-            self._write_symbol_table(fh, categories)
-            fh.write("<table cellpadding=5 cellspacing=0 border=1>\n")
-            fh.write("<tr align=center>\n")
-            fh.write("  <td>&nbsp;</td>\n")
-            fh.write("  <td>&nbsp;</td>\n")
-            for cat in categories:
-                fh.write("  <td width=30>%s</td>\n" % cat)
-            fh.write("</tr>\n")
-            for pair in sorted(self.btr.btrels2):
-                cells = self.btr.btrels2[pair]
-                cell_categories = set([cell.category for cell in cells])
-                bt1, bt2 = pair
-                fh.write("<tr align=left>\n")
-                name = "%s-%s" % (bt1, bt2)
-                fh.write("  <td><a href=rels/%s.html><code>%s</code></a></td>\n"
-                         % (name, name))
-                fh.write("  <td>%s - %s</td>\n"
-                         % (_full_name(bt1), _full_name(bt2)))
-                for cat in categories:
-                    val = "&check;" if cat in cell_categories else "&nbsp;"
-                    fh.write("  <td align=center>%s</td>\n" % val)
-                fh.write("</tr>\n")
-                self._write_relation(bt1, bt2, name, cells)
-            fh.write("</table>\n")
-
-    def _write_symbol_table(self, fh, categories):
-        fh.write("<table cellpadding=5 cellspacing=0 border=1>\n")
-        # there are 12 categoeirs and I want them in two columns
-        for i in range(6):
-            cat1 = categories[i]
-            cat2 = categories[i+6]
-            fh.write("<tr align=left>\n")
-            fh.write("  <td>%s</td>\n" % cat1)
-            fh.write("  <td>%s</td>\n" % POINTER_SYMBOLS.get(cat1))
-            fh.write("  <td>%s</td>\n" % cat2)
-            fh.write("  <td>%s</td>\n" % POINTER_SYMBOLS.get(cat2))
-            fh.write("</tr>\n")
-        fh.write("</table><p/>\n")
-
-    def _write_head(self, fh):
-        fh.write("<head>\n")
-        fh.write("<style>\n")
-        fh.write("a:link { text-decoration: none; }\n")
-        fh.write("a:visited { text-decoration: none; }\n")
-        fh.write("a:hover { text-decoration: underline; }\n")
-        fh.write("a:active { text-decoration: underline; }\n")
-        fh.write(".blue { color: blue; }\n")
-        fh.write(".green { color: green; }\n")
-        fh.write("dd { margin-bottom: 20px; }\n")
-        fh.write("code { font-size: larger; }\n")
-        fh.write("</style>\n</head>\n")
-
-    def _ensure_directories(self):
-        if not os.path.exists(self.html_dir):
-            os.makedirs(self.html_dir)
-            os.makedirs(self.rels_dir)
-
-    def _write_relation(self, bt1, bt2, name, cells):
-        fname = os.path.join(self.rels_dir, name + '.html')
-        with open(fname, 'w') as fh:
-            fh.write("<html>\n")
-            self._write_head(fh)
-            fh.write("<body>\n")
-            fh.write("<h2>%s-%s</h2>\n" % (bt1, bt2))
-            self._write_pair_description(fh, bt1, bt2)
-            fh.write('<p>Relations:')
-            for cell in cells:
-                fh.write(" [<a href=#%s>%s</a>]"
-                         % (cell.category, POINTER_SYMBOLS.get(cell.category)))
-            fh.write('</p>')
-            for cell in cells:
-                fh.write("<a name=%s></a>\n" % cell.category)
-                fh.write("<p>&bullet; %s  (%s)</p>\n"
-                         % (POINTER_SYMBOLS.get(cell.category), cell.category))
-                rels = self.btr.allrels[name]
-                grouped_rels = {}
-                for rel in rels:
-                    # If we skip this test we get a problem when, for example,
-                    # we have <ss1 #s ss2> and <ss2 %s ss1>. In that case the
-                    # results will also show <ss1 %s ss2> and <ss2 #s ss1>.
-                    if rel[1] == cell.category:
-                        source = rel[3]
-                        target = rel[4]
-                        grouped_rels.setdefault(source.id, [source, []])
-                        grouped_rels[source.id][1].append(target)
-                fh.write("<blockquote>\n<dl>\n")
-                for synset_id in grouped_rels:
-                    source, targets = grouped_rels[synset_id]
-                    fh.write("  <dt>%s</dt>\n" % source.as_html())
-                    fh.write("  <dd>\n")
-                    for target in targets:
-                        fh.write("%s<br/>" % target.as_html())
-                    fh.write("  </dd>\n")
-                fh.write("</dl>\n</blockquote>\n")
-
-    def _write_pair_description(self, fh, bt1, bt2):
-        fh.write('<p>{')
-        for offset, synset in self.basic_types.get(bt1):
-            fh.write(' %s' % synset)
-        fh.write(' } &bullet; {')
-        for offset, synset in self.basic_types.get(bt2):
-            fh.write(' %s' % synset)
-        fh.write('}</p>\n')
-
-
-def _full_name(basic_type):
-    return cltypes.BASIC_TYPES.get(basic_type)
 
 
 if __name__ == '__main__':

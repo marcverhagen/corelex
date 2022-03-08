@@ -1,5 +1,11 @@
-INDEX_FILE = '/DATA/resources/lexicons/wordnet/WordNet-3.0/dict/index.noun'
-DATA_FILE = '/DATA/resources/lexicons/wordnet/WordNet-3.0/dict/data.noun'
+"""
+
+Script to print number of synsets and pointers in wordnet.
+
+"""
+
+INDEX_FILE = '/Users/Shared/data/resources/lexicons/wordnet/WordNet-3.1/dict/index.noun'
+DATA_FILE = '/Users/Shared/data/resources/lexicons/wordnet/WordNet-3.1/dict/data.noun'
 
 
 lengths = {}

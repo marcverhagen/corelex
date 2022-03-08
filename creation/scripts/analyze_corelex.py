@@ -1,5 +1,10 @@
-corelex_file = 'bak/corelex.tab'
-corelex_file = 'corelex.tab'
+"""
+
+Script to analyze Corelex. Doesn't do a lot and is probably obsolete now.
+
+"""
+
+corelex_file = '../data/corelex-2.0-types-nouns.tab'
 
 type_count = 0
 polysemous_type_count = 0
